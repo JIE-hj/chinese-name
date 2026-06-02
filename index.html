@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>'내 이름은 중국어로...'</title>
+<title>중국어 이름 찾기</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap');
 
@@ -19,518 +19,987 @@
   --color-text-title: #0F172A; /* 차분한 네이비 슬레이트 */
   --color-text-body: #475569;
   --color-text-muted: #94A3B8;
-  --font-sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  --shadow-md: 0 10px 25px -5px rgba(79, 70, 229, 0.08), 0 8px 10px -6px rgba(79, 70, 229, 0.08);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: var(--font-sans);
-  background-color: var(--color-bg-main);
-  color: var(--color-text-body);
-  line-height: 1.6;
-  -webkit-tap-highlight-color: transparent;
-  padding: 20px 10px;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: var(--font-sans); background: var(--color-bg-main); display: flex; justify-content: center; min-height: 100vh; color: var(--color-text-body); -webkit-font-smoothing: antialiased; }
 
-.container {
-  max-width: 600px;
-  margin: 0 auto;
-  background: var(--color-bg-card);
-  border-radius: 24px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-  padding: 30px 20px;
-  border: 1px solid var(--color-border);
-}
-
-.hero {
-  text-align: center;
-  margin-bottom: 30px;
-}
-.hero-ic {
-  font-size: 3rem;
-  margin-bottom: 10px;
-}
-.hero h1 {
-  font-size: 1.8rem;
-  color: var(--color-text-title);
-  font-weight: 700;
-  margin-bottom: 8px;
-  letter-spacing: -0.5px;
-}
-.hero p {
-  font-size: 0.95rem;
-  color: var(--text-muted);
-}
-
-/* 입력 영역 */
-.input-group {
-  margin-bottom: 25px;
-}
-.label-style {
-  display: block;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--color-text-title);
-  margin-bottom: 8px;
-}
-.input-wrapper {
-  position: relative;
-  display: flex;
-  gap: 8px;
-}
-input[type="text"] {
-  flex: 1;
-  padding: 14px 16px;
-  font-size: 1.1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  outline: none;
-  transition: all 0.2s ease;
-  font-weight: 500;
-}
-input[type="text"]:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primary-light);
-}
-.btn-search {
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 0 24px;
-  border-radius: 14px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.btn-search:hover {
-  background-color: var(--color-primary-dark);
-}
-
-/* 글자별 선택 가이드 영역 */
-.selection-area {
-  background: var(--color-bg-main);
-  border-radius: 18px;
-  padding: 20px;
-  margin-bottom: 25px;
-  border: 1px dashed var(--color-border);
-}
-.step-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.char-select-row {
-  margin-bottom: 20px;
-}
-.char-select-row:last-child { margin-bottom: 0; }
-.row-label {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-text-title);
-  margin-bottom: 8px;
-}
-.hanja-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.hanja-btn {
-  background: white;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 10px 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
+/* 메인 프레임 */
+.app {
+  width: 100%;
+  max-width: 420px;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  min-width: 70px;
-}
-.hanja-btn:hover {
-  border-color: var(--color-primary);
-  background: var(--color-primary-light);
-}
-.hanja-btn.active {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
-  color: white;
-}
-.hanja-btn .h-char {
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 2px;
-  font-family: 'Noto Sans SC', sans-serif;
-}
-.hanja-btn .h-mean {
-  font-size: 0.75rem;
-  opacity: 0.8;
+  background: var(--color-bg-card);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.08);
+  position: relative;
+  overflow-x: hidden;
 }
 
-/* 결과 프리미엄 카드 */
-.result-card {
-  background: white;
+/* 화면 전환 */
+.screen { display: none; flex-direction: column; flex: 1; }
+.screen.on { display: flex; }
+
+/* 탑바 스타일 최적화 */
+.topbar {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border);
+}
+.back-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   border: 1px solid var(--color-border);
-  border-radius: 20px;
-  padding: 25px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
-}
-.result-header {
-  text-align: center;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--color-bg-main);
-  margin-bottom: 20px;
-}
-.res-name-main {
-  font-size: 2.4rem;
-  font-weight: 700;
-  color: var(--color-text-title);
-  letter-spacing: 2px;
-  font-family: 'Noto Sans SC', sans-serif;
-  margin-bottom: 5px;
-}
-.res-pinyin {
-  font-size: 1.2rem;
-  color: var(--color-primary);
-  font-weight: 600;
-}
-.res-kor-sub {
-  font-size: 1rem;
-  color: var(--color-text-muted);
-  margin-top: 4px;
-}
-
-/* 이름 해석 섹션들 */
-.r-section {
-  margin-bottom: 22px;
-}
-.r-section:last-child { margin-bottom: 0; }
-.r-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--color-text-title);
-  margin-bottom: 8px;
+  background: var(--color-bg-card);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-.r-text {
-  font-size: 0.95rem;
+  justify-content: center;
   color: var(--color-text-body);
-  background: var(--color-bg-main);
-  padding: 14px 16px;
-  border-radius: 12px;
-  white-space: pre-line;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-/* 태그 그룹 스타일 */
-.r-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.r-tag {
+.back-btn:hover { background: var(--color-primary-light); color: var(--color-primary); border-color: #C7D2FE; }
+.topbar-title { font-size: 17px; font-weight: 700; color: var(--color-text-title); letter-spacing: -0.5px; }
+.tbadge {
+  margin-left: auto;
   background: var(--color-primary-light);
-  color: var(--color-primary-dark);
-  font-size: 0.85rem;
-  font-weight: 500;
-  padding: 6px 12px;
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
   border-radius: 20px;
 }
 
-/* 획순 보기 링크 버튼 */
-.btn-stroke-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--color-accent-light);
-  color: var(--color-accent);
-  padding: 8px 14px;
-  border-radius: 10px;
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 600;
-  transition: opacity 0.2s;
-  margin-top: 5px;
-}
-.btn-stroke-link:hover { opacity: 0.9; }
-
-/* 오디오 버튼 */
-.btn-audio {
-  background: none;
+/* 입체감 있는 모던 버튼 */
+.btn {
   border: none;
   cursor: pointer;
-  font-size: 1.2rem;
-  color: var(--color-primary);
-  vertical-align: middle;
-  margin-left: 6px;
-  transition: transform 0.1s;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
-.btn-audio:active { transform: scale(0.9); }
+.btn-p { background: var(--color-primary); color: #fff; padding: 15px 20px; width: 100%; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25); }
+.btn-p:hover { background: var(--color-primary-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3); }
+.btn-p:active { transform: translateY(1px); }
+.btn-g { background: #F8FAFC; color: var(--color-text-body); border: 1px solid var(--color-border); padding: 12px 14px; }
+.btn-g:hover { border-color: var(--color-text-muted); color: var(--color-text-title); background: #F1F5F9; }
 
-/* 로딩 애니메이션 */
-.loading-box {
-  text-align: center;
-  padding: 40px 0;
-  color: var(--color-text-muted);
+/* 입력 페이지 */
+#si { padding: 24px 20px; overflow-y: auto; }
+.hero { text-align: center; margin-bottom: 28px; }
+.hero-ic { width: 56px; height: 56px; background: var(--color-primary-light); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 26px; }
+.hero h1 { font-size: 33px; font-weight: 700; color: var(--color-text-title); margin-bottom: 8px; letter-spacing: -1px; line-height: 1.2; }
+.hero p { font-size: 13px; color: var(--color-text-body); line-height: 1.6; font-weight: 400; padding: 0 10px; }
+
+.fl { font-size: 12px; color: var(--color-text-title); margin-bottom: 8px; font-weight: 700; letter-spacing: -0.3px; }
+.fw { margin-bottom: 18px; }
+.cr { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+
+/* 고급스러운 인풋 필드 */
+input.inp {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  background: var(--color-bg-card);
+  color: var(--color-text-title);
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+input.inp:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12); }
+input.inp::placeholder { color: var(--color-text-muted); font-size: 13px; }
+
+/* 추천 선택 상자 */
+.cp { margin-top: 6px; background: var(--color-bg-card); border: 1.5px solid #CBD5E1; border-radius: var(--radius-md); overflow: hidden; max-height: 180px; overflow-y: auto; display: none; box-shadow: var(--shadow-md); }
+.cg { display: grid; grid-template-columns: repeat(4, 1fr); }
+.cb { background: none; border: none; border-bottom: 1px solid var(--color-border); border-right: 1px solid var(--color-border); cursor: pointer; padding: 10px 4px; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: background 0.15s; }
+.cb:hover { background: #F8FAFC; }
+.cb.sel { background: var(--color-primary-light); }
+.cb-h { font-size: 22px; font-weight: 700; color: var(--color-text-title); font-family: 'Noto Sans SC', sans-serif; }
+.cb-m { font-size: 11px; color: var(--color-text-body); text-align: center; max-width: 70px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 500; }
+.cb-p { font-size: 10px; color: var(--color-primary); font-weight: 700; letter-spacing: -0.2px; }
+.cb.sel .cb-h { color: var(--color-primary); }
+
+/* 선택 완료 칩 뱃지 */
+.sb { display: inline-flex; align-items: center; gap: 6px; background: var(--color-primary-light); border: 1px solid #C7D2FE; border-radius: var(--radius-sm); padding: 5px 12px; margin-top: 6px; box-shadow: var(--shadow-sm); }
+.sb-h { font-size: 16px; font-weight: 700; color: var(--color-primary); font-family: 'Noto Sans SC', sans-serif; }
+.sb-info { font-size: 11px; color: #4338CA; font-weight: 500; }
+.sb-x { background: none; border: none; cursor: pointer; color: #818CF8; font-size: 12px; padding: 0 2px; margin-left: 4px; font-weight: 700; }
+
+/* 한글 이름 예시 섹션 */
+.exb { background: #F8FAFC; border-radius: var(--radius-md); padding: 14px; margin: 8px 0 24px; border: 1px solid var(--color-border); }
+.ex-t { font-size: 11px; color: var(--color-text-body); margin-bottom: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+.ex-ch { display: flex; gap: 6px; flex-wrap: wrap; }
+.ec { background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 13px; font-weight: 500; color: var(--color-text-body); cursor: pointer; transition: all 0.15s; }
+.ec:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-light); }
+
+/* 결과 메인 대시보드 */
+#sp { overflow-y: auto; }
+.nh { background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%); margin: 16px 16px 20px; border-radius: var(--radius-lg); padding: 26px 20px; text-align: center; box-shadow: var(--shadow-md); }
+.nh-label { font-size: 10px; color: rgba(255,255,255,0.45); letter-spacing: 1px; margin-bottom: 6px; font-weight: 700; text-transform: uppercase; }
+.nh-trad { font-size: 14px; color: rgba(255,255,255,0.65); margin-bottom: 6px; font-family: 'Noto Sans SC', sans-serif; letter-spacing: 4px; font-weight: 500; }
+.nh-simp { font-size: 48px; font-weight: 700; color: #ffffff; margin-bottom: 4px; letter-spacing: 6px; font-family: 'Noto Sans SC', sans-serif; text-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+.nh-py { font-size: 16px; color: #C7D2FE; margin-bottom: 18px; letter-spacing: 0.5px; font-weight: 700; }
+
+.pa { background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.25); color: #fff; border-radius: 30px; padding: 10px 24px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; transition: all 0.2s; }
+.pa:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
+
+/* 글자 리스트 카드 */
+.sl { font-size: 11px; color: var(--color-text-muted); padding: 0 20px 8px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.ccs { padding: 0 16px 24px; display: flex; flex-direction: column; gap: 10px; }
+.cc { background: var(--color-bg-card); border: 1.5px solid var(--color-border); border-radius: var(--radius-lg); padding: 18px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow-sm); }
+.cc:hover { border-color: var(--color-primary); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.cc.done { border-color: var(--color-accent); background: var(--color-accent-light); }
+.cl { display: flex; align-items: center; gap: 18px; }
+.cc-chars { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 48px; }
+.cc-trad-s { font-size: 11px; color: var(--color-text-muted); font-family: 'Noto Sans SC', sans-serif; min-height: 14px; font-weight: 500; }
+.cc-simp-s { font-size: 34px; font-weight: 700; color: var(--color-primary); font-family: 'Noto Sans SC', sans-serif; line-height: 1; }
+.cc-py { font-size: 12px; color: var(--color-primary); margin-bottom: 3px; font-weight: 700; }
+.cc-ko { font-size: 14px; color: var(--color-text-title); font-weight: 700; }
+.cr2 { display: flex; align-items: center; gap: 6px; color: var(--color-text-muted); }
+.dm { color: var(--color-accent); font-weight: 700; font-size: 16px; }
+
+/* 쓰기 연습 보드 */
+#spr { overflow-y: auto; }
+.ic { margin: 16px; background: var(--color-bg-card); border: 1.5px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-sm); }
+.ic-ko { font-size: 16px; font-weight: 700; color: var(--color-text-title); }
+.ic-py { font-size: 14px; font-weight: 700; color: var(--color-primary); margin-top: 2px; }
+.ic-chars-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
+.ic-trad-l { font-size: 11px; color: var(--color-text-muted); font-family: 'Noto Sans SC', sans-serif; font-weight: 500; }
+.ic-arr { font-size: 10px; color: var(--color-text-muted); }
+.ic-simp-l { font-size: 14px; color: var(--color-primary); font-family: 'Noto Sans SC', sans-serif; font-weight: 700; }
+
+.ww { display: flex; justify-content: center; padding: 0 16px 12px; }
+.wb { width: 260px; height: 260px; border: 2px solid var(--color-primary); border-radius: var(--radius-lg); background: var(--color-bg-card); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; box-shadow: var(--shadow-sm); }
+.wb::before, .wb::after { content: ''; position: absolute; pointer-events: none; }
+.wb::before { width: 1px; height: 100%; background: #E2E8F0; left: 50%; border-left: 1.5px dashed var(--color-primary); opacity: 0.3; }
+.wb::after { height: 1px; width: 100%; background: #E2E8F0; top: 50%; border-top: 1.5px dashed var(--color-primary); opacity: 0.3; }
+.wm { position: absolute; font-size: 12px; color: var(--color-text-muted); text-align: center; padding: 12px; line-height: 1.6; z-index: 1; font-weight: 500; }
+
+.dh { text-align: center; font-size: 13px; color: var(--color-accent); padding: 0 0 10px; opacity: 0; font-weight: 700; transition: opacity 0.3s; }
+.dh.show { opacity: 1; }
+
+.ar { padding: 0 16px; display: flex; gap: 8px; margin-bottom: 10px; }
+.nr { padding: 0 16px 24px; display: flex; gap: 8px; }
+.ar .btn-g, .nr button { flex: 1; }
+
+/* 이름 해설 프리미엄 리포트 */
+#smeaning { overflow-y: auto; }
+.mhero { margin: 16px 16px 0; background: linear-gradient(135deg, #0F172A 0%, var(--color-primary-dark) 100%); border-radius: var(--radius-lg); padding: 22px 20px; text-align: center; box-shadow: var(--shadow-md); }
+.mhero-simp { font-size: 38px; font-weight: 700; color: #fff; font-family: 'Noto Sans SC', sans-serif; letter-spacing: 4px; margin-bottom: 4px; }
+.mhero-py { font-size: 15px; color: #C7D2FE; font-weight: 700; }
+
+.report-box { padding: 20px 16px; margin: 16px; background: var(--color-bg-card); border: 1.5px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+.r-section { margin-bottom: 24px; border-bottom: 1px solid var(--color-border); padding-bottom: 20px; }
+.r-section:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+.r-title { font-size: 14px; font-weight: 700; color: var(--color-primary); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; letter-spacing: -0.3px; }
+.r-char-row { display: flex; gap: 16px; margin-bottom: 12px; background: #F8FAFC; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--color-border); }
+.r-char-row:last-child { margin-bottom: 0; }
+.r-char { font-size: 42px; font-weight: 700; font-family: 'Noto Sans SC', sans-serif; color: var(--color-primary); line-height: 1; display: flex; align-items: center; }
+.r-char-desc { flex: 1; font-size: 13px; color: var(--color-text-body); line-height: 1.6; }
+.r-basic, .r-symbol { margin-bottom: 8px; }
+.r-basic:last-child, .r-symbol:last-child { margin-bottom: 0; }
+.r-basic strong, .r-symbol strong { color: var(--color-text-title); font-weight: 700; font-size: 12px; display: block; margin-bottom: 2px; }
+.r-text { font-size: 14px; color: var(--color-text-title); line-height: 1.7; padding: 4px 0; font-weight: 500; }
+.r-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.r-tag { background: var(--color-primary-light); color: #4338CA; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; border: 1px solid #C7D2FE; }
+.r-summary { font-size: 15px; font-weight: 700; color: var(--color-accent); text-align: center; padding: 16px; background: var(--color-accent-light); border-radius: var(--radius-md); border: 1px solid #A7F3D0; }
+
+/* 엔딩 완료 화면 */
+#sc { align-items: center; justify-content: center; padding: 36px 24px; text-align: center; }
+.ci { width: 80px; height: 80px; background: var(--color-accent-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 38px; border: 2px solid #A7F3D0; }
+.c-simp { font-size: 38px; font-weight: 700; color: var(--color-primary); margin-bottom: 4px; font-family: 'Noto Sans SC', sans-serif; letter-spacing: 2px; }
+.c-trad { font-size: 12px; color: var(--color-text-muted); margin-bottom: 4px; font-family: 'Noto Sans SC', sans-serif; }
+.cy { font-size: 16px; font-weight: 700; color: var(--color-primary-dark); margin-bottom: 16px; }
+.ct { font-size: 21px; font-weight: 700; color: var(--color-text-title); margin-bottom: 8px; letter-spacing: -0.5px; }
+.cs { font-size: 14px; color: var(--color-text-body); line-height: 1.7; margin-bottom: 24px; }
+.cbs { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+
+/* 로딩 화면 스타일 */
+#loader {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--color-bg-card); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; z-index: 100;
 }
 .spinner {
-  width: 30px;
-  height: 30px;
-  border: 3px solid var(--color-border);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 12px auto;
+  width: 44px; height: 44px; border: 4px solid var(--color-border);
+  border-top: 4px solid var(--color-primary); border-radius: 50%;
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; margin-bottom: 16px;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-.hidden { display: none !important; }
+@media print {
+  body { background: white; }
+  .app { max-width: 100%; box-shadow: none; min-height: auto; }
+  .topbar, .back-btn, .snd, .ar, .nr, .mbtn-row, .cbs, .pa { display: none !important; }
+  .screen.on { display: block; }
+  .hero, .nh, .mhero { background: white !important; color: black !important; border: 1px solid #ccc; }
+  .nh-simp, .nh-trad, .nh-py, .mhero-simp, .mhero-py { color: black !important; }
+  .wb { border: 1px solid #000; break-inside: avoid; margin: 0 auto; }
+  .cc { border: 1px solid #000; break-inside: avoid; }
+  .report-box { border: 1px solid #000; break-inside: avoid; }
+  .exb, .fw, .cr { display: none; }
+  #pb { display: block; }
+}
 </style>
+
+<!-- ⚡ 핵심 CDN 라이브러리 연동 (실시간 변환 엔진) -->
+<script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
+<script src="https://unpkg.com/pinyin-pro"></script>
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 </head>
 <body>
 
-<div class="container">
-  <div class="hero">
-    <div class="hero-ic">✍️</div>
-    <h1>내 이름은 중국어로...</h1>
-    <p>이름의 음 부분을 입력 → 한자 선택 → 간화자 쓰기 및 발음 연습</p>
-  </div>
-
-  <div class="input-group">
-    <label class="label-style">성 제외 이름 입력 (예: 현정, 지우)</label>
-    <div class="input-wrapper">
-      <input type="text" id="nameInput" placeholder="이름을 입력하세요" maxlength="3">
-      <button class="btn-search" id="btnSearch">변환</button>
-    </div>
-  </div>
-
-  <div id="loadingBox" class="loading-box hidden">
+<div class="app">
+  <!-- 로딩 화면 -->
+  <div id="loader">
     <div class="spinner"></div>
-    <div id="loadingText">인명용 한자 데이터베이스 로드 중...</div>
+    <div id="loader-text" style="font-size:14px; color:var(--color-text-body); font-weight:700;">인명 한자 사전 통합 분석 중...</div>
   </div>
 
-  <div id="selectionArea" class="selection-area hidden">
-    <div class="step-title">💡 각 글자에 맞는 한자를 골라주세요</div>
-    <div id="selectionRowsContainer"></div>
-  </div>
+  <audio id="tts-audio" crossorigin="anonymous" referrerpolicy="no-referrer"></audio>
 
-  <div id="resultCard" class="result-card hidden">
-    <div class="result-header">
-      <div class="res-name-main" id="resSimplified">炫政</div>
-      <div>
-        <span class="res-pinyin" id="resPinyin">Xuàn zhèng</span>
-        <button class="btn-audio" id="btnPlayAudio" title="발음 듣기">🔊</button>
+  <!-- 메인 화면 -->
+  <div class="screen on" id="si">
+    <div style="padding:10px 0 0">
+      <div class="hero">
+        <div class="hero-ic">✍️</div>
+        <h1>내 이름은 중국어로...</h1>
+        <p>이름의 음 부분을 입력 → 한자 선택 → 간화자 쓰기 및 발음 연습</p>
       </div>
-      <div class="res-kor-sub" id="resTraditional">(한자 원문: 炫政)</div>
+      <div class="fw">
+        <div class="fl">성 (필수)</div>
+        <input class="inp" id="if" placeholder="예: 김, 박, 이, 손, 장, 최, 지, 호..." maxlength="4" autocomplete="off">
+        <div class="cp" id="cf"></div>
+        <div id="sf"></div>
+      </div>
+      <div class="cr">
+        <div>
+          <div class="fl">이름 첫째 (필수)</div>
+          <input class="inp" id="i1" placeholder="예: 현" maxlength="3" autocomplete="off">
+          <div class="cp" id="c1"></div>
+          <div id="s1"></div>
+        </div>
+        <div>
+          <div class="fl">이름 둘째 (선택)</div>
+          <input class="inp" id="i2" placeholder="예: 수  ※외자면 비워두기" maxlength="3" autocomplete="off">
+          <div class="cp" id="c2"></div>
+          <div id="s2"></div>
+        </div>
+      </div>
+      <div class="exb">
+        <div class="ex-t">💡 예시 클릭해보기</div>
+        <div class="ex-ch">
+          <span class="ec" onclick="fex('김','현','정')">김현정</span>
+          <span class="ec" onclick="fex('이','준','호')">이준호</span>
+          <span class="ec" onclick="fex('박','민','지')">박민지</span>
+          <span class="ec" onclick="fex('손','수','연')">손수연</span>
+          <span class="ec" onclick="fex('장','유','진')">장유진</span>
+          <span class="ec" onclick="fex('최','서','연')">최서연</span>
+        </div>
+      </div>
+      <div class="err" id="eb"></div>
+      <button class="btn btn-p" onclick="sub()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        이름 변환하기 (간체로 변환)
+      </button>
     </div>
+  </div>
 
-    <div id="interpretationContainer"></div>
+  <!-- 이름 프리뷰 스크린 -->
+  <div class="screen" id="sp">
+    <div class="topbar">
+      <button class="back-btn" onclick="go('si')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="topbar-title">나의 중국어 이름</span>
+    </div>
+    <div id="pb"></div>
+  </div>
+
+  <!-- 쓰기 연습 스크린 -->
+  <div class="screen" id="spr">
+    <div class="topbar">
+      <button class="back-btn" onclick="go('sp')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="topbar-title">한자 쓰기 연습</span>
+      <span class="tbadge" id="prb"></span>
+    </div>
+    <div class="ic">
+      <div>
+        <div class="ic-chars-row">
+          <span class="ic-trad-l" id="pr-trad"></span>
+          <span class="ic-arr" id="pr-arr"></span>
+          <span class="ic-simp-l" id="pr-simp-lbl"></span>
+        </div>
+        <div class="ic-ko" id="pr-ko"></div>
+        <div class="ic-py" id="pr-py"></div>
+      </div>
+      <button class="snd" id="pr-snd" aria-label="발음 듣기">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>
+      </button>
+    </div>
+    <div class="ww"><div class="wb" id="wb"><div class="wm">로딩 중...</div></div></div>
+    <div class="dh" id="dh">✅ 완성! 다음 글자로 넘어가세요</div>
+    <div class="ar">
+      <button class="btn btn-g" onclick="anim()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        획순 보기
+      </button>
+      <button class="btn btn-g" onclick="retry()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        다시 쓰기
+      </button>
+    </div>
+    <div class="nr">
+      <button class="btn btn-g" id="pb2" onclick="pch()">← 이전</button>
+      <button class="btn btn-p" id="nb">다음 →</button>
+    </div>
+  </div>
+
+  <!-- 뜻풀이 스크린 -->
+  <div class="screen" id="smeaning">
+    <div class="topbar">
+      <button class="back-btn" onclick="go('sp')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="topbar-title">이름 뜻 풀이</span>
+    </div>
+    <div id="mhero-wrap"></div>
+    <div id="mcontent"></div>
+  </div>
+
+  <!-- 최종 축하 스크린 -->
+  <div class="screen" id="sc">
+    <div class="ci">🎉</div>
+    <div class="c-simp" id="cz"></div>
+    <div class="c-trad" id="c-trad-fin"></div>
+    <div class="cy" id="cy"></div>
+    <div class="ct">연습 완료!</div>
+    <div class="cs">중국어 이름을 완벽하게<br>쓸 수 있게 되었어요 👏</div>
+    <div class="cbs">
+      <button class="btn btn-p" onclick="goMeaning()">✨ 이름 뜻 알아보기</button>
+      <button class="btn btn-g" onclick="go('sp')">다시 연습하기</button>
+      <button class="btn btn-g" onclick="go('si')">다른 이름 변환하기</button>
+    </div>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 <script>
-let dbData = []; 
-const CSV_URL = "https://raw.githubusercontent.com/mathsetkk0102/nft/main/h_gpt.csv"; 
+// 전역 데이터 수집 사전
+let GLOBAL_NDB = {};
+let SDB = {};
 
-window.addEventListener('DOMContentLoaded', () => {
-  loadCSV();
-  document.getElementById('btnSearch').addEventListener('click', handleSearch);
-  document.getElementById('nameInput').addEventListener('keyup', (e) => {
-    if(e.key === 'Enter') handleSearch();
+// OpenCC 글로벌 변환 인스턴스 래퍼
+let toSimplified = (t) => t; 
+if (typeof OpenCC !== 'undefined') {
+  toSimplified = OpenCC.Converter({ from: 'tw', to: 'cn' });
+}
+
+// 1. ⚡ 3개 한자 파일(first_name.csv, data-naver.csv, data-gov.csv) 비동기 순차/병렬 연동 및 하이브리드 예외 처리
+async function loadAllDatabase() {
+  const loaderText = document.getElementById('loader-text');
+  try {
+    // 3개 자원을 병렬 fetch 로드하여 브라우저 로딩 지연 극소화
+    const [resFirstName, resDataNaver, resDataGov] = await Promise.all([
+      fetch('first_name.csv'),
+      fetch('data-naver.csv'),
+      fetch('data-gov.csv')
+    ]);
+
+    if (!resFirstName.ok || !resDataNaver.ok || !resDataGov.ok) {
+      throw new Error('필수 CSV 데이터 누락');
+    }
+
+    const txtFirstName = await resFirstName.text();
+    const txtDataNaver = await resDataNaver.text();
+    const txtDataGov = await resDataGov.text();
+
+    // 1단계: 성씨 사전 (first_name.csv) 파싱 -> SDB 객체 동적 형성
+    parseFirstNameCSV(txtFirstName);
+
+    // 2단계: 네이버 정밀 대법원 한자 (data-naver.csv) 파싱
+    parseNaverCSV(txtDataNaver);
+
+    // 3단계: 정부 인명용 추가 한자 (data-gov.csv) 교차 검증 및 무중복 병합
+    parseGovCSV(txtDataGov);
+
+    // 로딩 화면 숨김
+    document.getElementById('loader').style.display = 'none';
+  } catch (error) {
+    console.warn('3대 데이터 파일 패치에 실패하여 로컬 프리뷰 전용 Fallback 사전으로 교체 기동합니다.', error);
+    
+    // 로컬 캔버스 미리보기용 프리셋 사전 수립 (김, 이, 박, 손, 장, 최 성씨 및 기본 한자)
+    buildFallbackDatabase();
+    
+    // 개발 편의성 개선 안내 배너 주입
+    const notice = document.createElement('div');
+    notice.id = "preview-banner";
+    notice.style.cssText = "position:absolute; bottom:16px; left:16px; right:16px; background:rgba(15,23,42,0.94); color:#fff; font-size:11px; padding:12px 16px; border-radius:12px; z-index:99; pointer-events:auto; text-align:center; box-shadow:var(--shadow-md); font-weight:500; border:1px solid rgba(255,255,255,0.15); line-height:1.4;";
+    notice.innerHTML = `🎨 <strong>로컬 시뮬레이터 가동</strong><br>서버(GitHub/Netlify) 배포 즉시 <strong>3대 CSV 파일</strong>을 유기적으로 병합하여 대법원 전체 한자를 서비스합니다.`;
+    document.querySelector('.app').appendChild(notice);
+    
+    setTimeout(() => {
+      const banner = document.getElementById('preview-banner');
+      if(banner) {
+        banner.style.transition = "opacity 0.8s ease, transform 0.8s ease";
+        banner.style.opacity = "0";
+        banner.style.transform = "translateY(10px)";
+        setTimeout(() => banner.remove(), 800);
+      }
+    }, 5000);
+
+    document.getElementById('loader').style.display = 'none';
+  }
+}
+
+// 📌 first_name.csv 파싱 -> SDB 동적 빌드
+function parseFirstNameCSV(csvText) {
+  const lines = csvText.split('\n');
+  const regex = /^([가-힣]+)\(([^)]+)\)/;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const match = line.match(regex);
+    if (match) {
+      const hangul = match[1];
+      const trad = match[2]; // '賈'
+      const simp = toSimplified(trad);
+      
+      // 실시간 중국어 성씨 병음 추출
+      let py = "";
+      if(typeof pinyinPro !== 'undefined') {
+        py = pinyinPro.pinyin(trad, { toneType: 'symbol', v: true });
+      }
+      
+      if (!SDB[hangul]) {
+        SDB[hangul] = [];
+      }
+      SDB[hangul].push([trad, simp, py]);
+    }
+  }
+}
+
+// 📌 data-naver.csv 파싱 -> GLOBAL_NDB 빌드 (훈음 뜻풀이 확보)
+function parseNaverCSV(csvText) {
+  const lines = csvText.split('\n');
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const parts = line.split(',');
+    if (parts.length < 5) continue;
+    
+    const hangul = parts[0].trim();
+    const hanja = parts[3].trim();
+    let meaning = parts[4].trim();
+    
+    if (meaning.endsWith(hangul)) {
+      meaning = meaning.slice(0, -hangul.length).trim();
+    }
+    
+    if (!GLOBAL_NDB[hangul]) {
+      GLOBAL_NDB[hangul] = [];
+    }
+    GLOBAL_NDB[hangul].push([hanja, meaning]);
+  }
+}
+
+// 📌 data-gov.csv 파싱 -> 누락 한자 중복 검사 후 무중복 교차 병합
+function parseGovCSV(csvText) {
+  const lines = csvText.split('\n');
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const parts = line.split(',');
+    if (parts.length < 4) continue;
+    
+    const hangul = parts[0].replace(/"/g, '').trim();
+    const hanja = parts[3].replace(/"/g, '').trim();
+    
+    if (!GLOBAL_NDB[hangul]) {
+      GLOBAL_NDB[hangul] = [];
+    }
+    
+    // 번체자 중복 검사 후 누락 한자만 사전 풀에 밀어 넣음
+    const exists = GLOBAL_NDB[hangul].some(item => item[0] === hanja);
+    if (!exists) {
+      GLOBAL_NDB[hangul].push([hanja, ""]); // 추가된 한자는 빈 의미로 초기화(추후 실시간 병음 처리)
+    }
+  }
+}
+
+// 📌 비상 구동용 Fallback 임시 세팅
+function buildFallbackDatabase() {
+  SDB = {"가":[["賈","贾","jiǎ"],["價","价","jià"]],"간":[["簡","简","jiǎn"],["間","间","jiān"]],"갈":[["葛","","gé"]],"강":[["姜","","jiāng"],["康","","kāng"],["剛","刚","gāng"]],"견":[["甄","","zhēn"],["堅","견","jiān"]],"경":[["慶","경","qìng"],["景","","jǐng"]],"김":[["金","","jīn"]],"이":[["李","","lǐ"]],"박":[["朴","","piáo"]],"손":[["孫","손","sūn"]],"장":[["張","장","zhāng"]],"최":[["崔","","cuī"]]};
+  GLOBAL_NDB = {
+    "현": [["玄","검을"], ["賢","어질"], ["鉉","솥귀"]],
+    "정": [["鄭","나라"], ["貞","곧을"], ["淨","깨끗할"], ["正","바를"]],
+    "준": [["俊","준걸"], ["準","평평할"], ["駿","준마"]],
+    "호": [["浩","넓을"], ["皓","흴"], ["琥","옥빛"]],
+    "민": [["敏","민첩할"], ["珉","옥돌"], ["民","백성"]],
+    "지": [["志","뜻"], ["智","지혜"], ["池","못"]],
+    "수": [["秀","빼어날"], ["修","닦을"], ["樹","나무"]],
+    "연": [["延","끌"], ["妍","고울"], ["蓮","연꽃"]],
+    "유": [["裕","넉넉할"], ["維","벼리"], ["柔","부드러울"]],
+    "진": [["珍","보배"], ["眞","참"], ["振","떨칠"]],
+    "서": [["瑞","상서"], ["舒","펼"], ["西","서녘"]]
+  };
+}
+
+window.addEventListener('load', loadAllDatabase);
+
+// 2. 🗣️ 제작자와 사용자 모두 평생 완전 무료인 브라우저 내장 TTS (Web Speech API) 적용
+function playSpeech(text) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'zh-CN';
+    utterance.rate = 0.85;
+    
+    const voices = window.speechSynthesis.getVoices();
+    const zhVoice = voices.find(v => v.lang.includes('zh') || v.lang.includes('ZH'));
+    if (zhVoice) utterance.voice = zhVoice;
+    
+    window.speechSynthesis.speak(utterance);
+  } else {
+    const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=zh-CN&q=${encodeURIComponent(text)}`;
+    const audio = new Audio(url);
+    audio.play().catch(e => console.log('Backup TTS Error:', e));
+  }
+}
+
+let sel={f:null,g1:null,g2:null},curName=[],pi=0,doneSet=new Set(),cDone=false,hw=null;
+
+function formatPinyin(arr) {
+  if (!arr || arr.length === 0) return "";
+  const capitalize = (str) => {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+  const family = capitalize(arr[0].py);
+  let given = "";
+  if (arr.length > 1) {
+    let rawGiven = arr.slice(1).map(d => d.py).join('');
+    given = " " + capitalize(rawGiven);
+  }
+  return family + given;
+}
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  if(id==='spr')initP();
+  if(id==='sc'){
+    const sz=curName.map(d=>d.simp).join(''),tz=curName.map(d=>d.trad).join('');
+    document.getElementById('cz').textContent=sz;
+    document.getElementById('c-trad-fin').textContent=tz!==sz?`번체: ${tz}`:'';
+    document.getElementById('cy').textContent = formatPinyin(curName);
+  }
+}
+
+// ⚡ 대법원 인명용 한자 목록을 화면에 뿌려줄 때 실시간으로 간체/병음을 변환 처리하는 핵심 로직
+function rc(field,sound){
+  const panel=document.getElementById('c'+field),isFam=field==='f';
+  if(!sound) { panel.style.display='none'; return; }
+  
+  let raw = [];
+  if(isFam) {
+    raw = SDB[sound] || [];
+  } else {
+    // 📌 전역 메모리 사전(GLOBAL_NDB)에서 데이터 로드
+    const src = GLOBAL_NDB[sound] || [];
+    raw = src.map(it => {
+      const trad = it[0];
+      const meaning = it[1];
+      
+      // 실시간 번체 -> 간체자 추론
+      const simp = toSimplified(trad);
+      
+      // 실시간 중국어 병음(성조 포함) 추출
+      let py = "";
+      if(typeof pinyinPro !== 'undefined') {
+        py = pinyinPro.pinyin(trad, { toneType: 'symbol', v: true });
+      }
+      
+      return [trad, simp, meaning, py];
+    });
+  }
+  
+  if(!raw.length){panel.style.display='none';return;}
+  panel.style.display='block';
+  const g=document.createElement('div');g.className='cg';
+  raw.forEach(it=>{
+    const trad=it[0],sm=it[1]||it[0],meaning=isFam?'':it[2],py=it[isFam?2:3];
+    const b=document.createElement('button');b.className='cb'+(sel[field]?.trad===trad?' sel':'');
+    b.innerHTML=`<span class="cb-h">${trad}</span>${meaning?`<span class="cb-m">${meaning}</span>`:''}<span class="cb-p">${py}</span>`;
+    b.onclick=()=>selH(field,{trad,simp:sm,meaning,sound,py});
+    g.appendChild(b);
   });
-  document.getElementById('btnPlayAudio').addEventListener('click', playAudio);
+  panel.innerHTML='';panel.appendChild(g);
+}
+
+function selH(field,item){
+  sel[field]=item;
+  rc(field,item.sound);
+  const sb=document.getElementById('s'+field),same=item.trad===item.simp;
+  sb.innerHTML=`<div class="sb"><span class="sb-h">${item.trad}</span>${!same?`<span style="font-size:9px;color:#AFA9EC">→${item.simp}</span>`:''}<span class="sb-info">${item.meaning?item.meaning+' · ':''}${item.py}</span><button class="sb-x" onclick="clrF('${field}')">✕</button></div>`;
+}
+
+function clrF(field){
+  sel[field]=null;
+  document.getElementById('s'+field).innerHTML='';
+  document.getElementById('i'+field).value='';
+  document.getElementById('c'+field).style.display='none';
+}
+
+['f','1','2'].forEach(f=>{
+  const el=document.getElementById('i'+f);
+  if(!el)return;
+  el.addEventListener('input',e=>{
+    const v=e.target.value.trim();
+    sel[f]=null;document.getElementById('s'+f).innerHTML='';rc(f,v);
+  });
 });
 
-function loadCSV() {
-  showLoading("인명용 한자 데이터베이스 로드 중...");
-  Papa.parse(CSV_URL, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
-    complete: function(results) {
-      dbData = results.data;
-      hideLoading();
-    },
-    error: function(err) {
-      console.error("CSV 로드 실패:", err);
-      showLoading("데이터를 가져오지 못했습니다. 파일 경로를 확인해주세요.");
+function fex(fa,g1,g2){
+  ['f','1','2'].forEach(f=>clrF(f));
+  document.getElementById('if').value=fa;
+  document.getElementById('i1').value=g1;
+  document.getElementById('i2').value=g2||'';
+  rc('f',fa);rc('1',g1);if(g2)rc('2',g2);
+  setTimeout(()=>{
+    function auto(field,sound,isFam){
+      if(isFam){
+        const it=(SDB[sound]||[])[0];if(!it)return;
+        selH(field,{trad:it[0],simp:it[1]||it[0],meaning:'',sound,py:it[2]});
+      } else {
+        const src=(GLOBAL_NDB[sound]||[])[0];if(!src)return;
+        const trad = src[0], meaning = src[1];
+        let simp = toSimplified(trad);
+        let py = typeof pinyinPro !== 'undefined' ? pinyinPro.pinyin(trad, { toneType: 'symbol', v: true }) : "";
+        selH(field,{trad,simp,meaning,sound,py});
+      }
     }
-  });
+    auto('f',fa,true);auto('1',g1,false);if(g2)auto('2',g2,false);
+  },120);
 }
 
-function handleSearch() {
-  const input = document.getElementById('nameInput').value.trim();
-  if(!input) {
-    alert("이름을 입력해주세요.");
-    return;
-  }
-  
-  const chars = input.split('');
-  const container = document.getElementById('selectionRowsContainer');
-  container.innerHTML = "";
-  
-  let hasData = false;
-  
-  chars.forEach((char, idx) => {
-    const matches = dbData.filter(d => d.훈음 && d.훈음.trim().startsWith(char));
-    if(matches.length > 0) {
-      hasData = true;
-      const row = document.createElement('div');
-      row.className = "char-select-row";
-      row.setAttribute('data-index', idx);
-      row.setAttribute('data-origin-char', char);
-      
-      const label = document.createElement('div');
-      label.className = "row-label";
-      label.innerText = `[${char}] 글자 선택`;
-      row.appendChild(label);
-      
-      const optionsDiv = document.createElement('div');
-      optionsDiv.className = "hanja-options";
-      
-      matches.forEach((m, mIdx) => {
-        const btn = document.createElement('button');
-        btn.className = "hanja-btn";
-        if(mIdx === 0) btn.classList.add('active');
-        
-        btn.setAttribute('data-trad', m.漢字 || m.한자 || "");
-        btn.setAttribute('data-simp', m.간화자 || m.간체자 || m.漢字 || m.한자 || "");
-        btn.setAttribute('data-pinyin', m.병음 || "");
-        btn.setAttribute('data-meaning', m.기본뜻 || m.뜻 || m.훈음 || "");
-        
-        btn.innerHTML = `
-          <span class="h-char">${m.漢字 || m.한자}</span>
-          <span class="h-mean">${m.훈음}</span>
-        `;
-        
-        btn.addEventListener('click', () => {
-          row.querySelectorAll('.hanja-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          buildFinalResult();
-        });
-        
-        optionsDiv.appendChild(btn);
-      });
-      
-      row.appendChild(optionsDiv);
-      container.appendChild(row);
-    }
-  });
-  
-  if(!hasData) {
-    alert("해당 이름의 한자를 데이터베이스에서 찾을 수 없습니다.");
-    document.getElementById('selectionArea').classList.add('hidden');
-    document.getElementById('resultCard').classList.add('hidden');
-    return;
-  }
-  
-  document.getElementById('selectionArea').classList.remove('hidden');
-  buildFinalResult();
+function sub(){
+  const eb=document.getElementById('eb');
+  if(!sel.f){eb.style.display='block';eb.textContent='성의 한자를 선택해주세요.';return;}
+  if(!sel['1']){eb.style.display='block';eb.textContent='이름 첫째 한자를 선택해주세요.';return;}
+  eb.style.display='none';
+  curName=[sel.f,sel['1']];
+  if(sel['2'])curName.push(sel['2']);
+  doneSet=new Set();cDone=false;
+  buildPrev();go('sp');
 }
 
-function normalizeMeaning(str) {
-  if(!str) return "";
-  let clean = str.split(';')[0].split(',')[0].trim();
-  clean = clean.replace(/[a-zA-Z]/g, '');
-  return clean;
+function buildPrev(){
+  const sz=curName.map(d=>d.simp).join(''),tz=curName.map(d=>d.trad).join('');
+  const formattedPy = formatPinyin(curName), tradDiff=tz!==sz;
+  
+  const cards=curName.map((d,i)=>`
+    <div class="cc${doneSet.has(i)?' done':''}" onclick="pi=${i};go('spr')">
+      <div class="cl">
+        <div class="cc-chars">
+          ${d.trad!==d.simp?`<div class="cc-trad-s">${d.trad}</div>`:'<div style="height:14px"></div>'}
+          <div class="cc-simp-s">${d.simp}</div>
+        </div>
+        <div><div class="cc-py">${d.py}</div><div class="cc-ko">${d.meaning?d.meaning+'('+d.sound+')':d.sound}</div></div>
+      </div>
+      <div class="cr2">${doneSet.has(i)?'<span class="dm">✓</span>':''}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>`).join('');
+    
+  document.getElementById('pb').innerHTML=`
+    <div class="nh">
+      ${tradDiff?`<div class="nh-label">번체</div><div class="nh-trad">${tz}</div>`:''}
+      <div class="nh-label">간체 (쓰기 연습)</div>
+      <div class="nh-simp">${sz}</div>
+      <div class="nh-py">${formattedPy}</div>
+      <button class="pa" onclick="playSpeech('${sz}')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+        전체 발음 듣기
+      </button>
+    </div>
+    <div class="sl">글자별 따라쓰기 연습</div>
+    <div class="ccs">${cards}</div>`;
 }
 
-// 텍스트 매칭 규칙 기반의 안전하고 유려한 고품질 문장 반환 시스템 (오류 원천 차단)
-function getExtendedMeaning(meaningStr) {
-  const base = {
-    ext: "자신만의 고유하고 특별한 역량을 바탕으로 가치를 창출함을 의미합니다.",
-    action: "자신만의 고유한 자질과 역량을 단단하게 발휘하여",
-    line: "고유한 가치를 세상에 드러내고 조화롭게 삶을 채워나가는 삶",
-    tags: ["고유한 특성을 지닌 사람", "조화로운 사람", "성실한 사람"]
+function initP(){
+  cDone=false;
+  const d=curName[pi],tradDiff=d.trad!==d.simp;
+  document.getElementById('pr-trad').textContent=tradDiff?d.trad:'';
+  document.getElementById('pr-arr').textContent=tradDiff?' → ':'';
+  document.getElementById('pr-simp-lbl').textContent=tradDiff?d.simp+' (간체)':'';
+  document.getElementById('pr-ko').textContent=d.meaning?d.meaning+'('+d.sound+')':d.sound;
+  document.getElementById('pr-py').textContent=d.py;
+  document.getElementById('prb').textContent=`${pi+1} / ${curName.length}`;
+  document.getElementById('pr-snd').onclick=()=>playSpeech(d.simp);
+  document.getElementById('dh').classList.remove('show');
+  updNav();
+  const box=document.getElementById('wb');
+  box.innerHTML='<div class="wm">로딩 중...</div>';hw=null;
+  const tw=()=>{if(window.HanziWriter)startW(d.simp);else setTimeout(tw,300);};tw();
+}
+
+function startW(char){
+  const box=document.getElementById('wb');box.innerHTML='';
+  try{
+    hw=HanziWriter.create(box,char,{
+      width:240,height:240,padding:25,
+      strokeAnimationSpeed:1.2,delayBetweenStrokes:150,
+      strokeColor:'#4F46E5',drawingColor:'#10b981',drawingWidth:12,
+      showOutline:true,outlineColor:'#e2e8f0',highlightColor:'#C7D2FE',showHintAfterMisses:2,
+      onLoadCharDataSuccess:()=>hw.quiz({onComplete:onDone}),
+      onLoadCharDataError:()=>{box.innerHTML=`<div class="wm">⚠️ 획순 데이터 없음<br><small>${char}(간체)</small></div>`;}
+    });
+  }catch(e){box.innerHTML='<div class="wm">오류가 발생했습니다</div>';}
+}
+
+function onDone(){
+  cDone=true;doneSet.add(pi);
+  document.getElementById('dh').classList.add('show');
+  playSpeech(curName[pi].simp);
+  updNav();buildPrev();
+}
+
+function updNav(){
+  const pb=document.getElementById('pb2'),nb=document.getElementById('nb');
+  pb.disabled=pi===0;
+  const isLast=pi===curName.length-1,allDone=doneSet.size===curName.length;
+  if(isLast&&allDone){nb.textContent='완료 🎉';nb.disabled=false;nb.onclick=()=>go('sc');}
+  else if(isLast){nb.textContent='마지막 글자';nb.disabled=true;nb.onclick=null;}
+  else{nb.textContent='다음 →';nb.disabled=false;nb.onclick=()=>nch();}
+}
+
+function nch(){if(pi<curName.length-1){pi++;initP();}}
+function pch(){if(pi>0){pi--;initP();}}
+function anim(){hw?.animateCharacter();}
+function retry(){cDone=false;document.getElementById('dh').classList.remove('show');hw?.quiz({onComplete:onDone});updNav();}
+
+function normalizeMeaning(mean) {
+  if(!mean) return "";
+  let m = mean.trim().replace(/\s*\(.*?\)\s*/g, ''); 
+  
+  const exact = {
+    "바를": "바르다", "어질": "어질다", "굳셀": "굳세다", "클": "크다", "길": "길다",
+    "밝을": "밝다", "맑을": "맑다", "높을": "높다", "깊을": "깊다", "넓을": "넓다",
+    "아름다울": "아름답다", "고울": "곱다", "순할": "순하다", "착할": "착하다",
+    "검을": "검다", "흴": "희다", "붉을": "붉다", "푸를": "푸르다", "좋을": "좋다",
+    "굳을": "굳다", "귀할": "귀하다", "슬기로울": "슬기롭다", "뛰어날": "뛰어나다",
+    "빛날": "빛나다", "편안할": "편안하다", "즐길": "즐기다", "지탱할": "지탱하다",
+    "이룰": "이루다", "베풀": "베풀다", "세울": "세우다", "도울": "돕다"
   };
-
-  if(!meaningStr) return base;
-
+  if(exact[m]) return exact[m];
+  
   const rules = [
-    { keys: ['빛', '밝', '비추', '나타나', '현'], ext: "주위를 환하게 비추며 명확한 비전과 방향을 제시하는 자질을 의미합니다.", action: "명확한 통찰력으로 주변을 따뜻하고 밝게 비추며 스스로의 길을 열어가고", line: "밝은 비전과 지혜로 세상에 긍정적인 영향력을 전하는 삶", tags: ["방향을 제시하는 사람", "통찰력 있는 사람", "명료한 사람", "빛이 되는 사람"] },
-    { keys: ['다스리', '정사', '임금', '이끌', '주장', '정치'], ext: "책임감을 가지고 질서를 세우고 조직이나 주위를 이끄는 태도를 의미합니다.", action: "조직을 조화롭게 이끌고 질서를 세우는 책임감과", line: "원칙과 리더십을 바탕으로 중심을 잡고 공동체를 이끄는 삶", tags: ["책임감 있는 사람", "중심을 잡는 사람", "리더십 있는 사람"] },
-    { keys: ['깊', '검', '오묘', '고요', '무겁'], ext: "사물의 본질을 꿰뚫는 깊이 있는 사고와 신중하고 묵직한 판단력을 의미합니다.", action: "신중하고 깊이 있는 사색을 바탕으로 본질을 통찰하며", line: "진중하고 오묘한 이치를 깨달아 학문이나 내면의 깊이를 더해가는 삶", tags: ["생각이 깊은 사람", "신중한 사람", "통찰력 있는 사람", "내면이 단단한 사람"] },
-    { keys: ['뜻', '의지', '굳세', '힘쓰', '높'], ext: "뚜렷한 목적의식을 가지고 흔들림 없이 자신의 뜻과 의지를 관철하는 자질을 의미합니다.", action: "높은 이상과 뚜렷한 목표를 향해 흔들림 없이 전진하며", line: "확고한 뜻과 굳건한 의지로 마침내 원하는 바를 성취해내는 삶", tags: ["의지가 강한 사람", "목표가 명확한 사람", "끊임없이 노력하는 사람"] },
-    { keys: ['넓', '크', '포용', '바다', '가득'], ext: "바다나 큰 물처럼 넓은 도량과 포용력으로 세상과 사람을 품는 그릇을 의미합니다.", action: "넓은 마음과 포용력으로 다채로운 세상을 포용하고 아우르며", line: "큰 강물처럼 막힘없이 흐르며 많은 사람들에게 이로움을 베푸는 삶", tags: ["포용력 있는 사람", "도량이 넓은 사람", "여유로운 사람"] },
-    { keys: ['지혜', '슬기', '알', '깨닫', '맑'], ext: "사물의 이치를 빠르게 깨닫고 명석하게 문제를 해결하는 슬기를 의미합니다.", action: "지혜롭고 현명한 눈으로 세상의 문제를 슬기롭게 풀어내며", line: "명석한 두뇌와 유연한 지혜로 올바른 선택을 내리는 삶", tags: ["지혜로운 사람", "현명한 사람", "슬기로운 사람", "지성적인 사람"] },
-    { keys: ['어질', '덕', '아름다', '착하', '은혜'], ext: "도덕적 인품과 따뜻한 성정으로 사람들의 존경과 신뢰를 받는 미덕을 의미합니다.", action: "어질고 은혜로운 인품으로 타인을 배려하고 덕을 쌓으며", line: "아름다운 성품과 도덕적 가치로 주변에 존경과 신뢰를 받는 삶", tags: ["인품이 훌륭한 사람", "배려심 깊은 사람", "신뢰를 주는 사람"] }
+    { e: '를', r: '르다' }, { e: '을', r: '다' }, { e: '은', r: '다' },
+    { e: '셀', r: '세다' }, { e: '질', r: '질다' }, { e: '할', r: '하다' },
+    { e: '로운', r: '롭다' }, { e: '운', r: '우다' }, { e: '클', r: '크다' },
+    { e: '길', r: '길다' }, { e: '멀', r: '멀다' }, { e: '빌', r: '비다' },
+    { e: '살', r: '살다' }, { e: '될', r: '되다' }
+  ];
+  for(let r of rules) {
+    if(m.endsWith(r.e)) return m.slice(0, -r.e.length) + r.r;
+  }
+  return m; 
+}
+
+function getExtendedMeaning(meaning) {
+  const dict = [
+    { 
+      keys: ["이미", "마치", "그치"], 
+      basic: "이미 지나갔거나 어떤 과정을 끝마쳤음을 뜻합니다.",
+      ext: "어떤 단계의 완성, 성숙함, 그리고 스스로 매듭짓는 능력을 의미합니다.", 
+      action: "어떤 일이든 끝까지 책임지고 매듭지으며",
+      tags: ["책임감 있는 사람", "성숙한 사람", "완성을 이끄는 사람"]
+    },
+    { 
+      keys: ["지탱하다", "받치", "나누어지", "지주"], 
+      basic: "어떤 것을 무너지지 않게 받치고 지탱함을 뜻합니다.",
+      ext: "어려움 속에서도 흔들림 없이 중심을 잡고 버티는 힘을 의미합니다.", 
+      action: "어려운 상황에서도 흔들림 없이 주변을 든든하게 지탱하며",
+      tags: ["균형을 잡는 사람", "든든한 버팀목", "책임감이 강한 사람"]
+    },
+    { 
+      keys: ["바르다", "곧", "옳", "법", "규칙", "정확", "평평"], 
+      basic: "치우치지 않고 곧고 바름을 뜻합니다.",
+      ext: "스스로의 원칙을 지키며 흔들리지 않는 올바른 기준을 의미합니다.", 
+      action: "치우침 없이 자신만의 올바른 원칙을 묵묵히 지켜가며",
+      tags: ["원칙을 지키는 사람", "정직한 사람", "신뢰를 주는 사람"]
+    },
+    { 
+      keys: ["크다", "넓다", "바다", "하늘", "많", "풍성", "가득", "큰물"], 
+      basic: "규모가 크고 넓거나, 물결이 넓게 퍼지는 모습을 뜻합니다.",
+      ext: "작은 일에 얽매이지 않는 풍요로움과 포용력, 넓은 시야를 의미합니다.", 
+      action: "넓은 마음과 포용력으로 작은 것에 연연하지 않고 세상을 바라보며",
+      tags: ["포용력이 있는 사람", "시야가 넓은 사람", "여유로운 사람"]
+    },
+    { 
+      keys: ["검다", "깊다", "멀", "가라앉", "그윽", "오묘"], 
+      basic: "속을 알 수 없을 정도로 깊고 오묘하며 가라앉은 상태를 뜻합니다.",
+      ext: "쉽게 드러나지 않는 내면의 깊이와 철학적 탐구, 심오한 사고를 의미합니다.", 
+      action: "드러나지 않는 곳에서도 깊이 있는 사고와 탐구를 이어가며",
+      tags: ["생각이 깊은 사람", "신중한 사람", "통찰력 있는 사람"]
+    },
+    { 
+      keys: ["임금", "으뜸", "주인", "다스리", "통치", "재상", "벼슬"], 
+      basic: "조직이나 무리의 가장 높은 위치나 통치자를 뜻합니다.",
+      ext: "어떤 집단에서 중심이 되어 책임감을 가지고 이끄는 리더십을 의미합니다.", 
+      action: "무리의 중심에서 무거운 책임감을 가지고 올바르게 이끌며",
+      tags: ["리더십 있는 사람", "책임감이 강한 사람", "중심을 잡는 사람"]
+    },
+    { 
+      keys: ["빛나다", "밝다", "해", "아침", "별", "불", "햇빛", "비치"], 
+      basic: "주위를 환하게 비추며 뚜렷하게 빛남을 뜻합니다.",
+      ext: "사물을 명료하게 인지하는 통찰과 나아갈 방향을 제시하는 능력을 의미합니다.", 
+      action: "명확한 통찰력으로 주변을 비추고 스스로의 길을 뚜렷하게 열어가며",
+      tags: ["방향을 제시하는 사람", "통찰력 있는 사람", "명료한 사람"]
+    },
+    { 
+      keys: ["어질다", "착하다", "순", "사랑", "은혜", "너그", "덕"], 
+      basic: "성품이 온화하고 타인을 배려하며 덕이 있음을 뜻합니다.",
+      ext: "주변과 마찰 없이 조화를 이루며 타인을 온전히 이해하는 태도를 의미합니다.", 
+      action: "타인을 이해하고 배려하는 마음으로 주변과 부드럽게 조화를 이루며",
+      tags: ["배려하는 사람", "조화로운 사람", "이해심 많은 사람"]
+    },
+    { 
+      keys: ["굳세다", "강하다", "굳다", "바위", "돌", "쇠", "무기", "매울"], 
+      basic: "단단하고 튼튼하여 쉽게 부서지거나 굽혀지지 않음을 뜻합니다.",
+      ext: "외부의 압력에도 흔들리지 않는 단단한 의지와 소신을 의미합니다.", 
+      action: "어떤 어려움에도 흔들림 없이 자신의 단단한 의지를 관철하며",
+      tags: ["의지가 강한 사람", "소신 있는 사람", "단단한 사람"]
+    },
+    { 
+      keys: ["맑다", "깨끗하다", "희다", "순수", "얼음", "눈", "씻"], 
+      basic: "티 없이 맑고 불순물이 섞이지 않은 본연의 상태를 뜻합니다.",
+      ext: "외부 환경에 물들지 않고 자신만의 본질과 결백함을 유지하는 태도를 의미합니다.", 
+      action: "세파에 휩쓸리지 않고 자신만의 뚜렷한 본질을 맑게 지켜가며",
+      tags: ["순수한 사람", "본질을 지키는 사람", "결백한 사람"]
+    },
+    { 
+      keys: ["지혜", "슬기롭다", "알", "생각", "깨닫", "배우", "글", "책", "이치"], 
+      basic: "사물의 이치를 깨닫고 깊이 생각하여 아는 능력을 뜻합니다.",
+      ext: "끊임없는 지적 탐구와 합리적인 사리분별 능력을 의미합니다.", 
+      action: "합리적인 사고와 끊임없는 탐구로 사리를 명확히 분별하며",
+      tags: ["지혜로운 사람", "탐구하는 사람", "합리적인 사람"]
+    },
+    { 
+      keys: ["아름답다", "곱다", "꽃", "향기", "옥", "구슬", "보배", "빛깔"], 
+      basic: "보기에 곱고 가치가 있으며 빛깔이나 향기가 뛰어남을 뜻합니다.",
+      ext: "스스로를 갈고닦아 완성해낸 고유한 품격과 내면의 가치를 의미합니다.", 
+      action: "내면의 가치를 갈고닦아 자신만의 고유한 품격을 드러내며",
+      tags: ["품격 있는 사람", "가치 있는 사람", "내면을 가꾸는 사람"]
+    },
+    { 
+      keys: ["오르다", "나아가다", "뛰어나", "이루다", "성취", "이끌", "앞", "뜻", "목표"], 
+      basic: "어떤 목적지를 향해 움직이거나 높은 단계로 뛰어오름을 뜻합니다.",
+      ext: "현실에 안주하지 않는 진취성과 뚜렷한 목표 의식을 의미합니다.", 
+      action: "스스로 세운 목표를 향해 멈추지 않고 진취적으로 나아가며",
+      tags: ["목표 의식이 강한 사람", "진취적인 사람", "성취하는 사람"]
+    },
+    { 
+      keys: ["뿌리", "바탕", "터", "집", "마을", "나라"], 
+      basic: "어떤 것의 근본이나 기초가 되는 곳을 뜻합니다.",
+      ext: "견고한 기초를 다지고 흔들리지 않는 소속감과 안정감을 의미합니다.", 
+      action: "탄탄한 기초 위에서 흔들림 없이 안정적으로 자신의 뜻을 세우며",
+      tags: ["기초가 튼튼한 사람", "안정감을 주는 사람", "근본을 아는 사람"]
+    },
+    { 
+      keys: ["길다", "오래", "영원"], 
+      basic: "시간이나 공간적으로 끝까지 이어지거나 멀리 뻗어감을 뜻합니다.",
+      ext: "일시적이지 않은 지속성과 묵묵히 버텨내는 끈기를 의미합니다.", 
+      action: "단기적인 결과에 흔들리지 않고 묵묵히 자신의 길을 오래도록 이어가며",
+      tags: ["끈기 있는 사람", "지속하는 사람", "묵묵한 사람"]
+    }
   ];
 
-  for (const rule of rules) {
-    if (rule.keys.some(k => meaningStr.includes(k))) {
-      return rule;
+  for (let s of dict) {
+    for (let k of s.keys) {
+      if (meaning.includes(k)) return s;
     }
   }
-  return base;
+
+  return { 
+      basic: `'${meaning}'이라는 본래의 뜻을 가지고 있습니다.`,
+      ext: `'${meaning}'이(가) 가진 속성을 의미합니다.`, 
+      action: `'${meaning}'의 속성을 바탕으로 자신의 삶을 구축하며`,
+      tags: [`고유한 특성을 지닌 사람`, "자신의 길을 가는 사람"]
+  };
 }
 
-function buildFinalResult() {
-  const rows = document.querySelectorAll('.char-select-row');
-  let finalSimp = "";
-  let finalTrad = "";
-  let pinyins = [];
-  let selectedDataArr = [];
+function goMeaning() {
+  go('smeaning');
+  const nameOnly = curName.slice(1);
+  if (nameOnly.length === 0) {
+      document.getElementById('mhero-wrap').innerHTML = '<div style="padding:20px;text-align:center;">이름 글자가 선택되지 않았습니다.</div>';
+      return;
+  }
+  const sz = nameOnly.map(d => d.simp).join('');
+  const pyFormat = formatPinyin(curName).split(' ').slice(1).join('');
+
+  document.getElementById('mhero-wrap').innerHTML=`
+    <div class="mhero">
+      <div class="mhero-simp">${sz}</div>
+      <div class="mhero-py">${pyFormat}</div>
+    </div>`;
   
-  rows.forEach(row => {
-    const activeBtn = row.querySelector('.hanja-btn.active');
-    if(activeBtn) {
-      finalSimp += activeBtn.getAttribute('data-simp');
-      finalTrad += activeBtn.getAttribute('data-trad');
-      pinyins.push(activeBtn.getAttribute('data-pinyin'));
-      
-      selectedDataArr.push({
-        trad: activeBtn.getAttribute('data-trad'),
-        simp: activeBtn.getAttribute('data-simp'),
-        meaning: activeBtn.getAttribute('data-meaning')
-      });
-    }
-  });
-  
-  document.getElementById('resSimplified').innerText = finalSimp;
-  document.getElementById('resTraditional').innerText = `(한자 원문: ${finalTrad})`;
-  
-  const formattedPinyin = pinyins.map((p, i) => {
-    if(!p) return "";
-    let clean = p.trim();
-    if(i === 0) {
-      return clean.charAt(0).toUpperCase() + clean.slice(1);
-    }
-    return clean.toLowerCase();
-  }).join(' ');
-  
-  document.getElementById('resPinyin').innerText = formattedPinyin;
-  
-  const interpContainer = document.getElementById('interpretationContainer');
-  interpContainer.innerHTML = generateInterpretationHTML(selectedDataArr);
-  
-  document.getElementById('resultCard').classList.remove('hidden');
+  generateAndRenderReport(nameOnly);
 }
 
-function generateInterpretationHTML(givenNameArr) {
-  if (givenNameArr.length === 0) return "";
+function generateAndRenderReport(givenNameArr) {
+  const isOneChar = givenNameArr.length === 1;
+  let html = `<div class="report-box">`;
   
-  let html = "";
-  let isOneChar = givenNameArr.length === 1;
-  
-  // 1. 📖 한자 의미 섹션
-  html += `<div class="r-section"><div class="r-title">📖 한자 의미</div><div class="r-text">`;
-  givenNameArr.forEach(d => {
-    let n = normalizeMeaning(d.meaning);
-    let sem = getExtendedMeaning(n);
-    html += `<strong>${d.trad}</strong><br>`;
-    html += `기본 의미: ${d.meaning}을 뜻합니다.<br>`;
-    html += `이름에서의 해석: ${sem.ext}<br><br>`;
+  html += `<div class="r-section"><div class="r-title">📖 한자 의미</div>`;
+  givenNameArr.forEach((d) => {
+    let norm = normalizeMeaning(d.meaning);
+    const sem = getExtendedMeaning(norm);
+    
+    html += `
+    <div class="r-char-row">
+      <div class="r-char">${d.trad}</div>
+      <div class="r-char-desc">
+        <div class="r-basic"><strong>기본 의미:</strong> ${sem.basic}</div>
+        <div class="r-symbol"><strong>이름에서의 해석:</strong> ${sem.ext}</div>
+      </div>
+    </div>`;
   });
-  html = html.slice(0, -4);
-  html += `</div></div>`;
+  html += `</div>`;
   
-  // 2. ✨ 이름 풀이 섹션
   html += `<div class="r-section"><div class="r-title">✨ 이름 풀이</div><div class="r-text">`;
   let n1 = normalizeMeaning(givenNameArr[0].meaning);
   let sem1 = getExtendedMeaning(n1);
@@ -545,7 +1014,6 @@ function generateInterpretationHTML(givenNameArr) {
   }
   html += `</div></div>`;
   
-  // 3. 💭 떠오르는 이미지 섹션
   html += `<div class="r-section"><div class="r-title">💭 떠오르는 이미지</div><div class="r-tags">`;
   const tags = [];
   givenNameArr.forEach(d => {
@@ -555,47 +1023,20 @@ function generateInterpretationHTML(givenNameArr) {
   [...new Set(tags)].slice(0, 4).forEach(t => { html += `<span class="r-tag">${t}</span>`; });
   html += `</div></div>`;
   
-  // 4. 🎯 한 줄 해석 섹션
-  html += `<div class="r-section"><div class="r-title">🎯 한 줄 해석</div><div class="r-text">`;
+  html += `<div class="r-section"><div class="r-title">🎯 한 줄 해석</div><div class="r-summary">`;
   if (isOneChar) {
-    html += `"${sem1.line}"`;
+     const t1 = sem1.tags[0] || `'${n1}'의 특성을 지닌 사람`;
+     html += `"${t1}으로 삶을 구축해 나가는 이름"`;
   } else {
-    let n2 = normalizeMeaning(givenNameArr[1].meaning);
-    let sem2 = getExtendedMeaning(n2);
-    html += `"${sem1.line}, 그리고 ${sem2.line}"`;
+     let n2 = normalizeMeaning(givenNameArr[1].meaning);
+     let sem2 = getExtendedMeaning(n2);
+     const t1 = sem1.tags[0] || `'${n1}'`;
+     const t2 = sem2.tags[0] || `'${n2}'`;
+     html += `"${t1}의 태도와 ${t2}의 특성을 아우르는 이름"`;
   }
-  html += `</div></div>`;
+  html += `</div></div></div>`;
   
-  // 5. 🎨 획순 쓰기 연습 섹션
-  html += `<div class="r-section"><div class="r-title">🎨 간화자 획순 쓰기 연습</div><div>`;
-  givenNameArr.forEach(d => {
-    html += `
-      <a class="btn-stroke-link" href="https://www.google.com/search?q=중국어+${encodeURIComponent(d.simp)}+획순" target="_blank">
-        '${d.simp}' 획순 보기 ↗
-      </a>&nbsp;
-    `;
-  });
-  html += `</div></div>`;
-  
-  return html;
-}
-
-function playAudio() {
-  const pinyinText = document.getElementById('resPinyin').innerText;
-  if (!pinyinText) return;
-  
-  const utterance = new SpeechSynthesisUtterance(pinyinText);
-  utterance.lang = 'zh-CN';
-  utterance.rate = 0.85; 
-  window.speechSynthesis.speak(utterance);
-}
-
-function showLoading(msg) {
-  document.getElementById('loadingText').innerText = msg;
-  document.getElementById('loadingBox').classList.remove('hidden');
-}
-function hideLoading() {
-  document.getElementById('loadingBox').classList.add('hidden');
+  document.getElementById('mcontent').innerHTML = html;
 }
 </script>
 </body>
