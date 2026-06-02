@@ -323,7 +323,7 @@ input.inp::placeholder { color: var(--color-text-muted); font-size: 13px; }
       <div class="err" id="eb"></div>
       <button class="btn btn-p" onclick="sub()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        이름 변환하기 (간체로 변환)
+        이름 변환하기 (간화자로 변환)
       </button>
     </div>
   </div>
@@ -484,7 +484,17 @@ async function loadAllDatabase() {
 function parseFirstNameCSV(csvText) {
   const lines = csvText.split('\n');
   const regex = /^([가-힣]+)\(([^)]+)\)/;
-  
+
+  // 간체 전용 자형 블랙리스트 (CSV에 섞여있는 순수 간체자들)
+  // 번체가 따로 있는 경우만 제거 — 번체 없이 간체만 쓰는 글자는 유지
+  const SIMPLIFIED_ONLY = new Set([
+    "张","长","陈","刘","马","罗","钱","孙","朱","赵","钟",
+    "郑","冯","严","华","鲁","韩","贾","许","凤","乔","龙",
+    "廖","梁","蒋","盘","蓝","农","覃","莫","潘","魏","丛",
+    "贝","叶","阎","阳","丁","邓","毛","仇","区","巩","吕",
+    "吴","岑","尚","欧","郎","项","龚","粱","涂","渝"
+  ]);
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
@@ -494,22 +504,17 @@ function parseFirstNameCSV(csvText) {
       const hangul = match[1];
       const trad = match[2];
 
-      // 간체자가 CSV에 포함된 경우 제외 (번체→간체 변환 결과와 동일한 것만 허용)
-      const simp = toSimplified(trad);
-      // trad가 이미 간체(한글자 간체자)인 경우: simp === trad 이고 번체 목록에 같은 음이 있으면 중복 → 스킵
-      // 단, 번체와 간체가 같은 글자(변화없는 경우)는 허용
-      // 핵심: CSV의 간체자를 걸러내려면 — trad 자체가 순수 간체 전용 자형인 경우 제거
-      // 실용적 방법: pinyinPro로 병음 생성 후, trad → simp 변환 결과가 다르거나(번체), 같아도 Unicode CJK 기본 범위 내 정자면 허용
-      // 가장 확실한 방법: 이미 추가된 simp와 중복이면 skip
+      // 블랙리스트 간체자 제거
+      if (SIMPLIFIED_ONLY.has(trad)) continue;
+
       if (!SDB[hangul]) SDB[hangul] = [];
 
-      // 같은 간화자로 변환되는 번체가 이미 있으면 중복 추가 안 함
-      const dupSimp = SDB[hangul].some(it => it[1] === simp);
-      if (dupSimp) continue;
+      // 같은 번체자 중복 방지
+      const dupTrad = SDB[hangul].some(it => it[0] === trad);
+      if (dupTrad) continue;
 
-      // 병음은 display 시점에 생성 (pinyinPro 로드 보장)
-      // 일단 빈칸으로 저장, rc()에서 실시간 생성
-      SDB[hangul].push([trad, simp, '']);
+      // simp, py는 rc() display 시점에 실시간 생성 (OpenCC/pinyinPro 로드 보장)
+      SDB[hangul].push([trad, '', '']);
     }
   }
 }
@@ -822,40 +827,33 @@ function go(id){
   }
 }
 
-// ⚡ 대법원 인명용 한자 목록을 화면에 뿌려줄 때 실시간으로 간체/병음을 변환 처리하는 핵심 로직
+// ⚡ 한자 목록 표시: 성씨는 번체만, 이름은 번체+간체+병음 실시간 변환
 function rc(field,sound){
   const panel=document.getElementById('c'+field),isFam=field==='f';
   if(!sound) { panel.style.display='none'; return; }
   
   let raw = [];
   if(isFam) {
-    // 성씨: SDB에서 가져오되, 병음을 display 시점에 실시간 생성
+    // 성씨: 번체(trad)만 표시 — 간화자 변환은 '이름 변환하기' 클릭 시점에 처리
     raw = (SDB[sound] || []).map(it => {
-      const trad = it[0], simp = it[1] || it[0];
-      let py = it[2];
-      // 병음이 비어있으면 지금 생성
-      if (!py && typeof pinyinPro !== 'undefined') {
-        py = pinyinPro.pinyin(simp, { toneType: 'symbol', v: true });
-        it[2] = py; // 캐시
+      const trad = it[0];
+      // 병음: 번체 기준으로 생성
+      if (!it[2] && typeof pinyinPro !== 'undefined') {
+        it[2] = pinyinPro.pinyin(trad, { toneType: 'symbol', v: true });
       }
-      return [trad, simp, py];
+      const py = it[2] || '';
+      return [trad, py]; // simp는 이 단계에서 불필요
     });
   } else {
-    // 📌 전역 메모리 사전(GLOBAL_NDB)에서 데이터 로드
     const src = GLOBAL_NDB[sound] || [];
     raw = src.map(it => {
       const trad = it[0];
       const meaning = it[1];
-      
-      // 실시간 번체 -> 간체자 추론
       const simp = toSimplified(trad);
-      
-      // 실시간 중국어 병음(성조 포함) 추출
-      let py = "";
+      let py = '';
       if(typeof pinyinPro !== 'undefined') {
-        py = pinyinPro.pinyin(trad, { toneType: 'symbol', v: true });
+        py = pinyinPro.pinyin(simp, { toneType: 'symbol', v: true });
       }
-      
       return [trad, simp, meaning, py];
     });
   }
@@ -864,13 +862,13 @@ function rc(field,sound){
   panel.style.display='block';
   const g=document.createElement('div');g.className='cg';
   raw.forEach(it=>{
-    const trad=it[0],sm=it[1]||it[0];
+    const trad=it[0];
     const meaning=isFam?'':it[2];
-    // 병음: isFam이면 it[2], 이름이면 it[3]. 비어있으면 빈칸(한자 절대 표시 안 함)
-    const py = (isFam ? it[2] : it[3]) || '';
+    const py=(isFam?it[1]:it[3])||'';
+    const simp=isFam?trad:(it[1]||trad); // 성씨는 일단 trad=simp로 임시 저장, sub()에서 변환
     const b=document.createElement('button');b.className='cb'+(sel[field]?.trad===trad?' sel':'');
     b.innerHTML=`<span class="cb-h">${trad}</span>${meaning?`<span class="cb-m">${meaning}</span>`:''}<span class="cb-p">${py}</span>`;
-    b.onclick=()=>selH(field,{trad,simp:sm,meaning,sound,py});
+    b.onclick=()=>selH(field,{trad,simp,meaning,sound,py});
     g.appendChild(b);
   });
   panel.innerHTML='';panel.appendChild(g);
@@ -879,8 +877,15 @@ function rc(field,sound){
 function selH(field,item){
   sel[field]=item;
   rc(field,item.sound);
-  const sb=document.getElementById('s'+field),same=item.trad===item.simp;
-  sb.innerHTML=`<div class="sb"><span class="sb-h">${item.trad}</span>${!same?`<span style="font-size:9px;color:#AFA9EC">→${item.simp}</span>`:''}<span class="sb-info">${item.meaning?item.meaning+' · ':''}${item.py}</span><button class="sb-x" onclick="clrF('${field}')">✕</button></div>`;
+  const sb=document.getElementById('s'+field);
+  // 성씨는 번체만 표시 (간화자 표시 안 함)
+  const isFam = field==='f';
+  if(isFam){
+    sb.innerHTML=`<div class="sb"><span class="sb-h">${item.trad}</span><span class="sb-info">${item.py}</span><button class="sb-x" onclick="clrF('${field}')">✕</button></div>`;
+  } else {
+    const same=item.trad===item.simp;
+    sb.innerHTML=`<div class="sb"><span class="sb-h">${item.trad}</span>${!same?`<span style="font-size:9px;color:#AFA9EC">→${item.simp}</span>`:''}<span class="sb-info">${item.meaning?item.meaning+' · ':''}${item.py}</span><button class="sb-x" onclick="clrF('${field}')">✕</button></div>`;
+  }
 }
 
 function clrF(field){
@@ -909,12 +914,15 @@ function fex(fa,g1,g2){
     function auto(field,sound,isFam){
       if(isFam){
         const it=(SDB[sound]||[])[0];if(!it)return;
-        selH(field,{trad:it[0],simp:it[1]||it[0],meaning:'',sound,py:it[2]});
+        // simp·py가 아직 없으면 지금 생성
+        if(!it[1]) it[1]=toSimplified(it[0]);
+        if(!it[2]&&typeof pinyinPro!=='undefined') it[2]=pinyinPro.pinyin(it[1],{toneType:'symbol',v:true});
+        selH(field,{trad:it[0],simp:it[1],meaning:'',sound,py:it[2]||''});
       } else {
         const src=(GLOBAL_NDB[sound]||[])[0];if(!src)return;
         const trad = src[0], meaning = src[1];
-        let simp = toSimplified(trad);
-        let py = typeof pinyinPro !== 'undefined' ? pinyinPro.pinyin(trad, { toneType: 'symbol', v: true }) : "";
+        const simp = toSimplified(trad);
+        const py = typeof pinyinPro !== 'undefined' ? pinyinPro.pinyin(simp, { toneType: 'symbol', v: true }) : "";
         selH(field,{trad,simp,meaning,sound,py});
       }
     }
@@ -927,8 +935,18 @@ function sub(){
   if(!sel.f){eb.style.display='block';eb.textContent='성의 한자를 선택해주세요.';return;}
   if(!sel['1']){eb.style.display='block';eb.textContent='이름 첫째 한자를 선택해주세요.';return;}
   eb.style.display='none';
-  curName=[sel.f,sel['1']];
-  if(sel['2'])curName.push(sel['2']);
+
+  // ✅ '이름 변환하기' 클릭 시점에 모든 글자 간화자 변환
+  function resolveSimp(item) {
+    const simp = toSimplified(item.trad);
+    const py = typeof pinyinPro !== 'undefined'
+      ? pinyinPro.pinyin(simp, { toneType: 'symbol', v: true })
+      : item.py;
+    return { ...item, simp, py };
+  }
+
+  curName = [resolveSimp(sel.f), resolveSimp(sel['1'])];
+  if(sel['2']) curName.push(resolveSimp(sel['2']));
   doneSet=new Set();cDone=false;
   buildPrev();go('sp');
 }
