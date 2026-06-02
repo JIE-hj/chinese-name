@@ -267,7 +267,7 @@ input.inp::placeholder { color: var(--color-text-muted); font-size: 13px; }
 
 <!-- ⚡ 핵심 CDN 라이브러리 연동 (실시간 변환 엔진) -->
 <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
-<script src="https://unpkg.com/pinyin-pro"></script>
+<script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.26.0/dist/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 </head>
 <body>
@@ -421,6 +421,118 @@ let SDB = {};
 let toSimplified = (t) => t; 
 if (typeof OpenCC !== 'undefined') {
   toSimplified = OpenCC.Converter({ from: 'tw', to: 'cn' });
+}
+
+// 병음 생성 래퍼 — pinyin-pro의 다양한 export 형태를 모두 처리
+function getPinyin(char) {
+  if (!char) return '';
+  // pinyin-pro UMD: window.pinyinPro.pinyin 또는 window.PinyinPro.pinyin
+  const lib = (typeof pinyinPro !== 'undefined' && pinyinPro)
+            || (typeof PinyinPro !== 'undefined' && PinyinPro)
+            || null;
+  if (!lib || typeof lib.pinyin !== 'function') return '';
+  try {
+    let result = lib.pinyin(char, { toneType: 'symbol', type: 'string' });
+    // 결과가 원본 한자 그대로거나 비어있으면 실패로 간주
+    if (!result || result === char || result.trim() === '') return '';
+    return result.trim();
+  } catch(e) { return ''; }
+}
+
+// 🔤 성씨 이독자(異讀字) 전용 발음 테이블 — 일반 발음과 다른 성씨만 등록
+const SURNAME_PINYIN = {
+  // 자음/모음이 완전히 바뀌는 성씨
+  "朴": "Piáo",  // 박 씨: pǔ(소박하다) → Piáo
+  "朴": "Piáo",
+  "單": "Shàn",  // 단 씨: dān → Shàn  (간체: 单)
+  "单": "Shàn",
+  "仇": "Qiú",   // 구 씨: chóu(원수) → Qiú
+  "查": "Zhā",   // 사/자 씨: chá(조사) → Zhā
+  "解": "Xiè",   // 해 씨: jiě(풀다) → Xiè
+  "繆": "Miào",  // 묘 씨: móu → Miào  (간체: 缪)
+  "缪": "Miào",
+  "覃": "Qín",   // 담 씨: tán(깊다) → Qín
+  "蓋": "Gě",    // 개 씨: gài(덮다) → Gě  (간체: 盖)
+  "盖": "Gě",
+  "繁": "Pó",    // 번 씨: fán(번성) → Pó
+  "員": "Yùn",   // 원 씨: yuán(인원) → Yùn  (간체: 员)
+  "员": "Yùn",
+  "區": "Ōu",    // 구 씨: qū(구역) → Ōu  (간체: 区)
+  "区": "Ōu",
+  "折": "Shé",   // 절 씨: zhé(꺾다) → Shé
+  // 성조만 바뀌는 성씨
+  "任": "Rén",   // 임 씨: rèn(4성) → Rén(2성)
+  "華": "Huà",   // 화 씨: huá(2성) → Huà(4성)  (간체: 华)
+  "华": "Huà",
+  "應": "Yìng",  // 응 씨: yīng(1성) → Yìng(4성)  (간체: 应)
+  "应": "Yìng",
+  "曲": "Qǔ",    // 곡 씨: qū(1성) → Qǔ(3성)
+  "暴": "Bù",    // 폭 씨 일부: bào(4성) → Bù
+  // 한국 성씨 특수 발음
+  "金": "Jīn",
+  "朴": "Piáo",
+  "李": "Lǐ",
+  "崔": "Cuī",
+  "鄭": "Zhèng",
+  "郑": "Zhèng",
+  "張": "Zhāng",
+  "张": "Zhāng",
+  "孫": "Sūn",
+  "孙": "Sūn",
+  "趙": "Zhào",
+  "赵": "Zhào",
+  "吳": "Wú",
+  "吴": "Wú",
+  "韓": "Hán",
+  "韩": "Hán",
+  "林": "Lín",
+  "盧": "Lú",
+  "卢": "Lú",
+  "許": "Xǔ",
+  "许": "Xǔ",
+  "姜": "Jiāng",
+  "尹": "Yǐn",
+  "梁": "Liáng",
+  "粱": "Liáng",
+  "高": "Gāo",
+  "徐": "Xú",
+  "宋": "Sòng",
+  "安": "Ān",
+  "柳": "Liǔ",
+  "洪": "Hóng",
+  "全": "Quán",
+  "文": "Wén",
+  "田": "Tián",
+  "河": "Hé",
+  "丁": "Dīng",
+  "白": "Bái",
+  "南": "Nán",
+  "方": "Fāng",
+  "千": "Qiān",
+  "蔣": "Jiǎng",
+  "蒋": "Jiǎng",
+  "沈": "Shěn",   // 심 씨: chén(일반) → Shěn(성씨)
+  "葛": "Gě",
+  "甘": "Gān",
+  "康": "Kāng",
+  "廉": "Lián",
+  "魚": "Yú",
+  "鱼": "Yú",
+  "龍": "Lóng",
+  "龙": "Lóng",
+  "馬": "Mǎ",
+  "马": "Mǎ",
+  "陳": "Chén",
+  "陈": "Chén",
+  "劉": "Liú",
+  "刘": "Liú",
+};
+
+// 성씨 전용 병음 — 이독자 테이블 우선, 없으면 일반 병음
+function getSurnamePinyin(trad) {
+  // 번체 먼저 확인, 없으면 간체로 변환 후 확인
+  const simp = toSimplified(trad);
+  return SURNAME_PINYIN[trad] || SURNAME_PINYIN[simp] || getPinyin(trad) || getPinyin(simp) || '';
 }
 
 // 1. ⚡ 3개 한자 파일(first_name.csv, data-naver.csv, data-gov.csv) 비동기 순차/병렬 연동 및 하이브리드 예외 처리
@@ -659,7 +771,7 @@ function buildFallbackDatabase() {
     "세": [["世","세상"],["洗","씻을"],["歲","해"]],
     "소": [["昭","밝을"],["素","흴"],["蘇","깨어날"],["笑","웃을"],["邵","고을이름"]],
     "송": [["松","소나무"],["宋","나라이름"],["頌","칭송할"]],
-    "수": [["洙","강이름"],["秀","빼어날"],["壽","목숨"],["洵","참으로"],["修","닦을"],["樹","나무"],["粹","순수할"],["穗","이삭"],["珠","구슬"],["琇","옥"],["壽","오랠"]],
+    "수": [["洙","강이름"],["秀","빼어날"],["壽","목숨"],["洵","참으로"],["修","닦을"],["樹","나무"],["粹","순수할"],["穗","이삭"],["琇","옥"],["壽","오랠"]],
     "숙": [["淑","맑을"],["肅","엄숙할"],["塾","글방"]],
     "순": [["純","순수할"],["舜","임금이름"],["珣","옥이름"],["淳","순박할"],["順","순할"]],
     "슬": [["瑟","거문고"]],
@@ -779,23 +891,64 @@ function buildFallbackDatabase() {
 window.addEventListener('load', loadAllDatabase);
 
 // 2. 🗣️ 제작자와 사용자 모두 평생 완전 무료인 브라우저 내장 TTS (Web Speech API) 적용
+// 이독자 성씨: TTS가 올바르게 읽도록 동일 발음의 다른 한자로 대체
+// (병음을 직접 넘기면 영어식으로 읽히므로 한자 대체가 정확함)
+const SURNAME_TTS_HANZI = {
+  "朴": "瓢",   // piáo — 瓢(바가지)와 동일 발음
+  "單": "善",   // shàn
+  "单": "善",
+  "仇": "求",   // qiú
+  "查": "扎",   // zhā
+  "解": "谢",   // xiè
+  "覃": "秦",   // qín
+  "沈": "审",   // shěn
+  "區": "欧",   // ōu
+  "区": "欧",
+  "繆": "庙",   // miào
+  "缪": "庙",
+  "蓋": "葛",   // gě
+  "盖": "葛",
+  "任": "人",   // rén
+  "華": "化",   // huà
+  "华": "化",
+  "曲": "取",   // qǔ
+};
+
+function buildTTSText() {
+  return curName.map((d, i) => {
+    const isSurname = i === 0;
+    if (isSurname && SURNAME_TTS_HANZI[d.trad]) {
+      return SURNAME_TTS_HANZI[d.trad];
+    }
+    return d.simp || d.trad;
+  }).join('');
+}
+
 function playSpeech(text) {
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+
+  function speak() {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'zh-CN';
     utterance.rate = 0.7;
-    
     const voices = window.speechSynthesis.getVoices();
-    const zhVoice = voices.find(v => v.lang.includes('zh') || v.lang.includes('ZH'));
+    const zhVoice = voices.find(v => v.lang === 'zh-CN' || v.lang === 'zh_CN')
+                 || voices.find(v => v.lang.startsWith('zh'));
     if (zhVoice) utterance.voice = zhVoice;
-    
     window.speechSynthesis.speak(utterance);
-  } else {
-    const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=zh-CN&q=${encodeURIComponent(text)}`;
-    const audio = new Audio(url);
-    audio.play().catch(e => console.log('Backup TTS Error:', e));
   }
+
+  // voices가 아직 안 로드됐으면 로드 후 실행
+  if (window.speechSynthesis.getVoices().length > 0) {
+    speak();
+  } else {
+    window.speechSynthesis.onvoiceschanged = () => { speak(); };
+  }
+}
+
+function getFullPy() {
+  return buildTTSText();
 }
 
 let sel={f:null,g1:null,g2:null},curName=[],pi=0,doneSet=new Set(),cDone=false,hw=null;
@@ -834,15 +987,10 @@ function rc(field,sound){
   
   let raw = [];
   if(isFam) {
-    // 성씨: 번체(trad)만 표시 — 간화자 변환은 '이름 변환하기' 클릭 시점에 처리
     raw = (SDB[sound] || []).map(it => {
       const trad = it[0];
-      // 병음: 번체 기준으로 생성
-      if (!it[2] && typeof pinyinPro !== 'undefined') {
-        it[2] = pinyinPro.pinyin(trad, { toneType: 'symbol', v: true });
-      }
-      const py = it[2] || '';
-      return [trad, py]; // simp는 이 단계에서 불필요
+      if (!it[2]) it[2] = getSurnamePinyin(trad);
+      return [trad, it[2]];
     });
   } else {
     const src = GLOBAL_NDB[sound] || [];
@@ -850,10 +998,7 @@ function rc(field,sound){
       const trad = it[0];
       const meaning = it[1];
       const simp = toSimplified(trad);
-      let py = '';
-      if(typeof pinyinPro !== 'undefined') {
-        py = pinyinPro.pinyin(simp, { toneType: 'symbol', v: true });
-      }
+      const py = getPinyin(simp) || getPinyin(trad);
       return [trad, simp, meaning, py];
     });
   }
@@ -914,15 +1059,13 @@ function fex(fa,g1,g2){
     function auto(field,sound,isFam){
       if(isFam){
         const it=(SDB[sound]||[])[0];if(!it)return;
-        // simp·py가 아직 없으면 지금 생성
-        if(!it[1]) it[1]=toSimplified(it[0]);
-        if(!it[2]&&typeof pinyinPro!=='undefined') it[2]=pinyinPro.pinyin(it[1],{toneType:'symbol',v:true});
-        selH(field,{trad:it[0],simp:it[1],meaning:'',sound,py:it[2]||''});
+        if(!it[2]) it[2]=getSurnamePinyin(it[0]);
+        selH(field,{trad:it[0],simp:it[0],meaning:'',sound,py:it[2]||''});
       } else {
         const src=(GLOBAL_NDB[sound]||[])[0];if(!src)return;
-        const trad = src[0], meaning = src[1];
-        const simp = toSimplified(trad);
-        const py = typeof pinyinPro !== 'undefined' ? pinyinPro.pinyin(simp, { toneType: 'symbol', v: true }) : "";
+        const trad=src[0],meaning=src[1];
+        const simp=toSimplified(trad);
+        const py=getPinyin(simp)||getPinyin(trad);
         selH(field,{trad,simp,meaning,sound,py});
       }
     }
@@ -936,17 +1079,17 @@ function sub(){
   if(!sel['1']){eb.style.display='block';eb.textContent='이름 첫째 한자를 선택해주세요.';return;}
   eb.style.display='none';
 
-  // ✅ '이름 변환하기' 클릭 시점에 모든 글자 간화자 변환
-  function resolveSimp(item) {
+  // ✅ '이름 변환하기' 클릭 시점에 모든 글자 간화자 변환 + 병음 확정
+  function resolveSimp(item, isSurname) {
     const simp = toSimplified(item.trad);
-    const py = typeof pinyinPro !== 'undefined'
-      ? pinyinPro.pinyin(simp, { toneType: 'symbol', v: true })
-      : item.py;
+    const py = isSurname
+      ? (getSurnamePinyin(item.trad) || '')
+      : (getPinyin(simp) || getPinyin(item.trad) || item.py || '');
     return { ...item, simp, py };
   }
 
-  curName = [resolveSimp(sel.f), resolveSimp(sel['1'])];
-  if(sel['2']) curName.push(resolveSimp(sel['2']));
+  curName = [resolveSimp(sel.f, true), resolveSimp(sel['1'], false)];
+  if(sel['2']) curName.push(resolveSimp(sel['2'], false));
   doneSet=new Set();cDone=false;
   buildPrev();go('sp');
 }
@@ -976,7 +1119,7 @@ function buildPrev(){
       <div class="nh-label">간체 (쓰기 연습)</div>
       <div class="nh-simp">${sz}</div>
       <div class="nh-py">${formattedPy}</div>
-      <button class="pa" onclick="playSpeech('${sz}')">
+      <button class="pa" onclick="playSpeech(buildTTSText())">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
         전체 발음 듣기
       </button>
@@ -994,7 +1137,8 @@ function initP(){
   document.getElementById('pr-ko').textContent=d.meaning?d.meaning+'('+d.sound+')':d.sound;
   document.getElementById('pr-py').textContent=d.py;
   document.getElementById('prb').textContent=`${pi+1} / ${curName.length}`;
-  document.getElementById('pr-snd').onclick=()=>playSpeech(d.simp);
+  const ttsChar = (pi===0 && SURNAME_TTS_HANZI[d.trad]) ? SURNAME_TTS_HANZI[d.trad] : (d.simp||d.trad);
+  document.getElementById('pr-snd').onclick=()=>playSpeech(ttsChar);
   document.getElementById('dh').classList.remove('show');
   updNav();
   const box=document.getElementById('wb');
@@ -1019,7 +1163,9 @@ function startW(char){
 function onDone(){
   cDone=true;doneSet.add(pi);
   document.getElementById('dh').classList.add('show');
-  playSpeech(curName[pi].simp);
+  const d2=curName[pi];
+  const ttsChar2=(pi===0&&SURNAME_TTS_HANZI[d2.trad])?SURNAME_TTS_HANZI[d2.trad]:(d2.simp||d2.trad);
+  playSpeech(ttsChar2);
   updNav();buildPrev();
 }
 
@@ -1039,25 +1185,40 @@ function retry(){cDone=false;document.getElementById('dh').classList.remove('sho
 
 function normalizeMeaning(mean) {
   if(!mean) return "";
-  let m = mean.trim().replace(/\s*\(.*?\)\s*/g, ''); 
+  let m = mean.trim().replace(/\s*\(.*?\)\s*/g, '').trim();
   
   const exact = {
-    "바를": "바르다", "어질": "어질다", "굳셀": "굳세다", "클": "크다", "길": "길다",
+    // 형용사
+    "바를": "바르다", "어질": "어질다", "굳셀": "굳세다", "클": "크다",
     "밝을": "밝다", "맑을": "맑다", "높을": "높다", "깊을": "깊다", "넓을": "넓다",
     "아름다울": "아름답다", "고울": "곱다", "순할": "순하다", "착할": "착하다",
     "검을": "검다", "흴": "희다", "붉을": "붉다", "푸를": "푸르다", "좋을": "좋다",
     "굳을": "굳다", "귀할": "귀하다", "슬기로울": "슬기롭다", "뛰어날": "뛰어나다",
-    "빛날": "빛나다", "편안할": "편안하다", "즐길": "즐기다", "지탱할": "지탱하다",
-    "이룰": "이루다", "베풀": "베풀다", "세울": "세우다", "도울": "돕다"
+    "빛날": "빛나다", "편안할": "편안하다", "즐길": "즐기다",
+    "이룰": "이루다", "베풀": "베풀다", "세울": "세우다", "도울": "돕다",
+    "나아갈": "나아가다", "이을": "잇다", "다스릴": "다스리다",
+    "알": "알다", "깨달을": "깨닫다", "배울": "배우다",
+    "갈": "가다", "올": "오다", "살": "살다", "될": "되다",
+    "길": "길다", "멀": "멀다",
+    "가득할": "가득하다", "풍성할": "풍성하다", "무성할": "무성하다",
+    "따뜻할": "따뜻하다", "온화할": "온화하다", "부드러울": "부드럽다",
+    "씩씩할": "씩씩하다", "용감할": "용감하다", "강건할": "강건하다",
+    "총명할": "총명하다", "현명할": "현명하다", "지혜로울": "지혜롭다",
+    "올바를": "올바르다", "정직할": "정직하다", "성실할": "성실하다",
   };
   if(exact[m]) return exact[m];
   
   const rules = [
-    { e: '를', r: '르다' }, { e: '을', r: '다' }, { e: '은', r: '다' },
-    { e: '셀', r: '세다' }, { e: '질', r: '질다' }, { e: '할', r: '하다' },
-    { e: '로운', r: '롭다' }, { e: '운', r: '우다' }, { e: '클', r: '크다' },
-    { e: '길', r: '길다' }, { e: '멀', r: '멀다' }, { e: '빌', r: '비다' },
-    { e: '살', r: '살다' }, { e: '될', r: '되다' }
+    { e: '스러울', r: '스럽다' },
+    { e: '로울', r: '롭다' },
+    { e: '스럽', r: '스럽다' },
+    { e: '로운', r: '롭다' },
+    { e: '셀', r: '세다' },
+    { e: '할', r: '하다' },
+    { e: '을', r: '다' },
+    { e: '은', r: '다' },
+    { e: '를', r: '르다' },
+    { e: '운', r: '우다' },
   ];
   for(let r of rules) {
     if(m.endsWith(r.e)) return m.slice(0, -r.e.length) + r.r;
@@ -1213,81 +1374,85 @@ const HANJA_DB = {
   "鳳": { basic:"봉황, 고귀하다", ext:["고귀함","품격","상서로움"], category:"beauty", action:"봉황처럼 고귀하고 품격 있는 기상으로", tags:["고귀한 사람","품격 있는 사람","상서로운 사람"] },
   "鶴": { basic:"학, 고결하다", ext:["고결함","우아함","절개"], category:"pure", action:"학처럼 고결하고 우아한 절개로", tags:["고결한 사람","우아한 사람","절개 있는 사람"] },
   "蓮": { basic:"연꽃, 청아하다", ext:["청아함","순수함","고결함"], category:"pure", action:"연꽃처럼 청아하고 순수한 고결함으로", tags:["청아한 사람","순수한 사람","고결한 사람"] },
-  "梅": { basic:"매화, 절개있다", ext:["절개","강인함","향기"], category:"pure", action:"매화처럼 강인한 절개와 향기로", tags:["절개 있는 사람","강인한 사람","향기로운 사람"] }
+  "梅": { basic:"매화, 절개 있다", ext:["절개","강인함","향기"], category:"pure", action:"매화처럼 강인한 절개와 향기로", tags:["절개 있는 사람","강인한 사람","향기로운 사람"] },
+  // ── 자주 쓰이는 추가 한자 ──
+  "之": { basic:"가다, 이르다", ext:["나아감","연결","흐름"], category:"goal", action:"목표를 향해 끊임없이 나아가며", tags:["나아가는 사람","연결하는 사람","흐름을 만드는 사람"] },
+  "太": { basic:"크다, 넓다", ext:["원대함","여유","포용"], category:"broad", action:"크고 넓은 원대한 기상으로", tags:["원대한 사람","여유로운 사람","포용력 있는 사람"] },
+  "雨": { basic:"비, 만물을 기르다", ext:["생명력","풍요","은혜"], category:"virtue", action:"비처럼 만물을 풍요롭게 기르며", tags:["풍요로운 사람","은혜로운 사람","생명력 있는 사람"] },
+  "風": { basic:"바람, 자유롭다", ext:["자유","변화","유연함"], category:"broad", action:"바람처럼 자유롭고 유연하게", tags:["자유로운 사람","유연한 사람","변화를 이끄는 사람"] },
+  "雲": { basic:"구름, 변화무쌍하다", ext:["자유","변화","유연함"], category:"broad", action:"구름처럼 자유롭게 변화하며", tags:["자유로운 사람","유연한 사람","창의적인 사람"] },
+  "石": { basic:"돌, 굳건하다", ext:["굳건함","불변","강인함"], category:"strength", action:"돌처럼 굳건하고 변하지 않는 의지로", tags:["굳건한 사람","의지 있는 사람","강인한 사람"] },
+  "草": { basic:"풀, 생명력이 강하다", ext:["생명력","강인함","번성"], category:"growth", action:"풀처럼 어디서든 강인하게 뿌리내리며", tags:["생명력 있는 사람","강인한 사람","번성하는 사람"] },
+  "竹": { basic:"대나무, 굳세고 곧다", ext:["절개","굳셈","곧음"], category:"strength", action:"대나무처럼 굳세고 곧은 절개로", tags:["절개 있는 사람","굳센 사람","올바른 사람"] },
+  "松": { basic:"소나무, 굳건하다", ext:["굳건함","절개","장수"], category:"longevity", action:"소나무처럼 사시사철 변하지 않는 굳건함으로", tags:["굳건한 사람","절개 있는 사람","장수하는 사람"] },
+  "桃": { basic:"복숭아, 아름답다", ext:["아름다움","복","싱그러움"], category:"beauty", action:"복숭아꽃처럼 싱그럽고 아름답게", tags:["아름다운 사람","복된 사람","싱그러운 사람"] },
+  "菊": { basic:"국화, 지조 있다", ext:["지조","고결함","절개"], category:"pure", action:"국화처럼 서리에도 굽히지 않는 지조로", tags:["지조 있는 사람","고결한 사람","절개 있는 사람"] },
+  "泉": { basic:"샘, 근원이 되다", ext:["근원","생명력","풍요"], category:"stability", action:"샘처럼 끊임없이 솟아나는 생명력으로", tags:["근원이 되는 사람","생명력 있는 사람","풍요로운 사람"] },
+  "川": { basic:"내, 끊임없이 흐르다", ext:["끊임없음","전진","유연함"], category:"goal", action:"내처럼 끊임없이 흘러 나아가며", tags:["끊임없는 사람","전진하는 사람","유연한 사람"] },
+  "日": { basic:"해, 밝고 따뜻하다", ext:["밝음","따뜻함","희망"], category:"light", action:"태양처럼 밝고 따뜻한 빛으로", tags:["밝은 사람","따뜻한 사람","희망을 주는 사람"] },
+  "玄": { basic:"검다, 깊고 오묘하다", ext:["심오함","철학","깊이"], category:"depth", action:"드러나지 않는 깊이와 심오한 철학으로", tags:["생각이 깊은 사람","신중한 사람","철학적인 사람"] },
+  "亦": { basic:"또한, 함께하다", ext:["포용","조화","균형"], category:"harmony", action:"모든 것을 아우르는 넉넉한 조화로", tags:["조화로운 사람","포용력 있는 사람","균형 잡힌 사람"] },
+  "承": { basic:"이어받다, 잇다", ext:["계승","책임감","연결"], category:"stability", action:"소중한 것을 이어받아 책임감 있게 발전시키며", tags:["책임감 있는 사람","이어가는 사람","든든한 사람"] },
+  "映": { basic:"비치다, 드러나다", ext:["반영","표현력","빛남"], category:"light", action:"세상을 환하게 비추고 자신을 드러내며", tags:["빛나는 사람","표현력 있는 사람","존재감 있는 사람"] },
+  "涵": { basic:"젖다, 품다", ext:["포용","깊이","관대함"], category:"broad", action:"넓고 깊은 마음으로 모든 것을 품으며", tags:["포용력 있는 사람","관대한 사람","깊이 있는 사람"] },
+  "澄": { basic:"맑다, 투명하다", ext:["맑음","투명함","순수함"], category:"pure", action:"맑고 투명한 마음으로 세상을 바라보며", tags:["맑은 사람","투명한 사람","순수한 사람"] },
+  "悠": { basic:"멀다, 여유롭다", ext:["여유","깊이","침착함"], category:"depth", action:"여유롭고 침착한 깊이로", tags:["여유로운 사람","침착한 사람","깊이 있는 사람"] },
+  "洋": { basic:"바다, 넓고 크다", ext:["광대함","포용","넓음"], category:"broad", action:"바다처럼 넓고 광대한 포용으로", tags:["넓은 사람","포용력 있는 사람","광대한 사람"] },
+  "奎": { basic:"별, 빛나다", ext:["빛남","학문","재능"], category:"wisdom", action:"별처럼 빛나는 학문과 재능으로", tags:["빛나는 사람","재능 있는 사람","학문적인 사람"] },
+  "圭": { basic:"홀, 올바르다", ext:["올바름","품위","기준"], category:"virtue", action:"올바르고 품위 있는 기준으로", tags:["올바른 사람","품위 있는 사람","기준이 되는 사람"] },
+  "珊": { basic:"산호, 아름답다", ext:["아름다움","희귀함","귀함"], category:"beauty", action:"산호처럼 희귀하고 아름다운 존재로", tags:["아름다운 사람","귀한 사람","특별한 사람"] },
+  "娜": { basic:"아름답다, 우아하다", ext:["우아함","아름다움","부드러움"], category:"beauty", action:"우아하고 아름다운 부드러움으로", tags:["우아한 사람","아름다운 사람","부드러운 사람"] },
+  "玟": { basic:"옥의 무늬, 아름답다", ext:["아름다움","귀함","품격"], category:"beauty", action:"옥처럼 아름답고 귀한 품격으로", tags:["아름다운 사람","귀한 사람","품격 있는 사람"] },
+  "彤": { basic:"붉다, 빛나다", ext:["열정","생동감","빛남"], category:"light", action:"붉게 빛나는 열정과 생동감으로", tags:["열정적인 사람","생동감 있는 사람","빛나는 사람"] },
+  "皎": { basic:"달빛, 맑고 밝다", ext:["맑음","밝음","순수함"], category:"light", action:"달빛처럼 맑고 밝은 순수함으로", tags:["맑은 사람","밝은 사람","순수한 사람"] },
+  "苑": { basic:"동산, 품다", ext:["포용","풍요","아름다움"], category:"beauty", action:"아름다운 동산처럼 풍요롭게 품으며", tags:["포용력 있는 사람","풍요로운 사람","아름다운 사람"] },
+  "曉": { basic:"새벽, 밝아오다", ext:["새 시작","희망","밝음"], category:"light", action:"새벽처럼 희망찬 새로운 시작으로", tags:["희망찬 사람","새 시작을 여는 사람","밝은 사람"] },
+  "晨": { basic:"새벽, 밝다", ext:["새로운 시작","희망","활기"], category:"light", action:"새벽처럼 활기차고 희망찬 시작으로", tags:["활기찬 사람","희망적인 사람","새 시작을 여는 사람"] },
+  "宸": { basic:"별궁, 고귀하다", ext:["고귀함","품위","권위"], category:"leadership", action:"고귀하고 품위 있는 권위로", tags:["고귀한 사람","품위 있는 사람","권위 있는 사람"] },
+  "珀": { basic:"호박, 귀하다", ext:["귀함","아름다움","특별함"], category:"beauty", action:"호박처럼 귀하고 특별한 아름다움으로", tags:["귀한 사람","특별한 사람","아름다운 사람"] },
+  "熹": { basic:"빛나다, 기쁘다", ext:["기쁨","빛남","따뜻함"], category:"light", action:"기쁨의 빛으로 주변을 따뜻하게 밝히며", tags:["빛나는 사람","기쁨을 주는 사람","따뜻한 사람"] },
+  "珩": { basic:"패옥, 아름답다", ext:["아름다움","품격","조화"], category:"beauty", action:"패옥처럼 아름답고 조화로운 품격으로", tags:["아름다운 사람","품격 있는 사람","조화로운 사람"] }
 };
 
 // ✨ HANJA_DB 직접 조회 기반 getExtendedMeaning
 function getExtendedMeaning(meaning, hanja) {
-  // 1단계: 한자 직접 조회 (가장 정확, 한자별 개별 ext 키워드 활용)
-  if (hanja && HANJA_DB[hanja]) {
-    return HANJA_DB[hanja];
+  // 1단계: 한자 직접 조회
+  if (hanja && HANJA_DB[hanja]) return HANJA_DB[hanja];
+
+  // 간체 대응 번체도 조회 (예: 贤→賢)
+  if (hanja) {
+    for (const key of Object.keys(HANJA_DB)) {
+      if (toSimplified(key) === hanja) return HANJA_DB[key];
+    }
   }
-  // 2단계: 훈음 키워드 매핑 (DB에 없는 한자 처리)
+
+  // 2단계: 훈음 키워드 매핑
   const keyMap = [
-    { keys:["빛나","밝","빛","햇","환하"], action:"밝고 환한 빛으로 주변을 비추며", tags:["밝은 사람","빛나는 사람","통찰력 있는 사람"], ext:["빛남","밝음","통찰"] },
-    { keys:["깊","오묘","그윽","심오"], action:"깊고 심오한 사고로", tags:["깊이 있는 사람","신중한 사람","철학적인 사람"], ext:["깊이","심오함","철학"] },
-    { keys:["슬기","지혜","현명","총명","뛰어나"], action:"지혜롭고 총명한 판단으로", tags:["지혜로운 사람","총명한 사람","탁월한 사람"], ext:["지혜","총명함","통찰"] },
-    { keys:["다스리","이끌","임금","으뜸","장수"], action:"책임감 있게 사람들을 이끌며", tags:["리더십 있는 사람","책임감 있는 사람","중심을 잡는 사람"], ext:["리더십","책임감","통솔"] },
-    { keys:["뜻","목표","의지","나아가","이루","성취"], action:"뚜렷한 목표와 의지로 나아가며", tags:["목표 있는 사람","의지 있는 사람","성취하는 사람"], ext:["의지","목표","성취"] },
-    { keys:["터","뿌리","근본","기초","안정","편안"], action:"든든한 기초와 안정감으로", tags:["안정적인 사람","든든한 사람","기초 있는 사람"], ext:["안정","기초","든든함"] },
-    { keys:["넓","크","바다","하늘","광대","포용"], action:"넓은 포용력과 큰 도량으로", tags:["포용력 있는 사람","넓은 사람","여유로운 사람"], ext:["포용","넓음","도량"] },
-    { keys:["어질","착하","은혜","덕","사랑","배려"], action:"어질고 따뜻한 마음으로 주변을 배려하며", tags:["따뜻한 사람","배려하는 사람","덕망 있는 사람"], ext:["따뜻함","배려","덕망"] },
-    { keys:["굳세","강하","용감","씩씩"], action:"강인한 의지와 용기로", tags:["강인한 사람","용감한 사람","의지 있는 사람"], ext:["강인함","용기","의지"] },
-    { keys:["맑","깨끗","순수","결백"], action:"맑고 순수한 마음으로", tags:["순수한 사람","맑은 사람","진실한 사람"], ext:["순수함","맑음","진실"] },
-    { keys:["아름다","곱","구슬","옥","보배","향기"], action:"아름답고 품격 있는 가치로", tags:["아름다운 사람","품격 있는 사람","귀한 사람"], ext:["아름다움","품격","귀함"] },
-    { keys:["복","화목","조화","넉넉"], action:"넉넉한 복과 조화로운 기운으로", tags:["복된 사람","조화로운 사람","넉넉한 사람"], ext:["복","조화","넉넉함"] },
-    { keys:["자라","번성","번창","성장","무성","여름","봄"], action:"왕성한 생명력과 성장의 에너지로", tags:["성장하는 사람","생명력 있는 사람","번성하는 사람"], ext:["성장","생명력","활력"] },
-    { keys:["오래","영원","끈기","지속","겨울"], action:"오래도록 변치 않는 끈기로", tags:["끈기 있는 사람","지속하는 사람","인내하는 사람"], ext:["끈기","지속","인내"] }
+    { keys:["빛나","밝","빛","햇","환하","새벽"], action:"밝고 환한 빛으로 주변을 비추며", tags:["밝은 사람","빛나는 사람","통찰력 있는 사람"], ext:["빛남","밝음","통찰"] },
+    { keys:["깊","오묘","그윽","심오","검다","현묘"], action:"깊고 심오한 사고로", tags:["깊이 있는 사람","신중한 사람","철학적인 사람"], ext:["깊이","심오함","철학"] },
+    { keys:["슬기","지혜","현명","총명","뛰어나","알다","깨닫"], action:"지혜롭고 총명한 판단으로", tags:["지혜로운 사람","총명한 사람","탁월한 사람"], ext:["지혜","총명함","통찰"] },
+    { keys:["다스리","이끌","임금","으뜸","장수","통솔"], action:"책임감 있게 사람들을 이끌며", tags:["리더십 있는 사람","책임감 있는 사람","중심을 잡는 사람"], ext:["리더십","책임감","통솔"] },
+    { keys:["뜻","목표","의지","나아가","이루","성취","가다"], action:"뚜렷한 목표와 의지로 나아가며", tags:["목표 있는 사람","의지 있는 사람","성취하는 사람"], ext:["의지","목표","성취"] },
+    { keys:["터","뿌리","근본","기초","안정","편안","이어"], action:"든든한 기초와 안정감으로", tags:["안정적인 사람","든든한 사람","기초 있는 사람"], ext:["안정","기초","든든함"] },
+    { keys:["넓","크다","바다","하늘","광대","포용","여유"], action:"넓은 포용력과 큰 도량으로", tags:["포용력 있는 사람","넓은 사람","여유로운 사람"], ext:["포용","넓음","도량"] },
+    { keys:["어질","착하","은혜","덕","사랑","배려","인자"], action:"어질고 따뜻한 마음으로 주변을 배려하며", tags:["따뜻한 사람","배려하는 사람","덕망 있는 사람"], ext:["따뜻함","배려","덕망"] },
+    { keys:["굳세","강하","용감","씩씩","굳다","단단"], action:"강인한 의지와 용기로", tags:["강인한 사람","용감한 사람","의지 있는 사람"], ext:["강인함","용기","의지"] },
+    { keys:["맑","깨끗","순수","결백","투명"], action:"맑고 순수한 마음으로", tags:["순수한 사람","맑은 사람","진실한 사람"], ext:["순수함","맑음","진실"] },
+    { keys:["아름답","곱다","구슬","옥","보배","향기","우아"], action:"아름답고 품격 있는 가치로", tags:["아름다운 사람","품격 있는 사람","귀한 사람"], ext:["아름다움","품격","귀함"] },
+    { keys:["복","화목","조화","넉넉","기쁘"], action:"넉넉한 복과 조화로운 기운으로", tags:["복된 사람","조화로운 사람","넉넉한 사람"], ext:["복","조화","넉넉함"] },
+    { keys:["자라","번성","번창","성장","무성","여름","봄","기르"], action:"왕성한 생명력과 성장의 에너지로", tags:["성장하는 사람","생명력 있는 사람","번성하는 사람"], ext:["성장","생명력","활력"] },
+    { keys:["오래","영원","끈기","지속","겨울","인내"], action:"오래도록 변치 않는 끈기로", tags:["끈기 있는 사람","지속하는 사람","인내하는 사람"], ext:["끈기","지속","인내"] }
   ];
   for (const e of keyMap) {
     if (e.keys.some(k => meaning.includes(k))) {
       return { basic:`${meaning}을(를) 뜻합니다.`, ext:e.ext, action:e.action, tags:e.tags };
     }
   }
-  // 3단계: fallback — 최소한 basic 뜻은 그대로 노출
+  // 3단계: fallback
   return {
     basic: `${meaning}을(를) 뜻합니다.`,
     ext: [meaning],
-    action: `${meaning}의 정신으로`,
-    tags: ["자신만의 길을 가는 사람"]
-  };
-}
-
-
-
-// ✨ HANJA_DB 직접 조회 기반 getExtendedMeaning
-function getExtendedMeaning(meaning, hanja) {
-  // 1단계: 한자 직접 조회 (가장 정확, 한자별 개별 ext 키워드 활용)
-  if (hanja && HANJA_DB[hanja]) {
-    return HANJA_DB[hanja];
-  }
-  // 2단계: 훈음 키워드 매핑 (DB에 없는 한자 처리)
-  const keyMap = [
-    { keys:["빛나","밝","빛","햇","환하"], action:"밝고 환한 빛으로 주변을 비추며", tags:["밝은 사람","빛나는 사람","통찰력 있는 사람"], ext:["빛남","밝음","통찰"] },
-    { keys:["깊","오묘","그윽","심오"], action:"깊고 심오한 사고로", tags:["깊이 있는 사람","신중한 사람","철학적인 사람"], ext:["깊이","심오함","철학"] },
-    { keys:["슬기","지혜","현명","총명","뛰어나"], action:"지혜롭고 총명한 판단으로", tags:["지혜로운 사람","총명한 사람","탁월한 사람"], ext:["지혜","총명함","통찰"] },
-    { keys:["다스리","이끌","임금","으뜸","장수"], action:"책임감 있게 사람들을 이끌며", tags:["리더십 있는 사람","책임감 있는 사람","중심을 잡는 사람"], ext:["리더십","책임감","통솔"] },
-    { keys:["뜻","목표","의지","나아가","이루","성취"], action:"뚜렷한 목표와 의지로 나아가며", tags:["목표 있는 사람","의지 있는 사람","성취하는 사람"], ext:["의지","목표","성취"] },
-    { keys:["터","뿌리","근본","기초","안정","편안"], action:"든든한 기초와 안정감으로", tags:["안정적인 사람","든든한 사람","기초 있는 사람"], ext:["안정","기초","든든함"] },
-    { keys:["넓","크","바다","하늘","광대","포용"], action:"넓은 포용력과 큰 도량으로", tags:["포용력 있는 사람","넓은 사람","여유로운 사람"], ext:["포용","넓음","도량"] },
-    { keys:["어질","착하","은혜","덕","사랑","배려"], action:"어질고 따뜻한 마음으로 주변을 배려하며", tags:["따뜻한 사람","배려하는 사람","덕망 있는 사람"], ext:["따뜻함","배려","덕망"] },
-    { keys:["굳세","강하","용감","씩씩"], action:"강인한 의지와 용기로", tags:["강인한 사람","용감한 사람","의지 있는 사람"], ext:["강인함","용기","의지"] },
-    { keys:["맑","깨끗","순수","결백"], action:"맑고 순수한 마음으로", tags:["순수한 사람","맑은 사람","진실한 사람"], ext:["순수함","맑음","진실"] },
-    { keys:["아름다","곱","구슬","옥","보배","향기"], action:"아름답고 품격 있는 가치로", tags:["아름다운 사람","품격 있는 사람","귀한 사람"], ext:["아름다움","품격","귀함"] },
-    { keys:["복","화목","조화","넉넉"], action:"넉넉한 복과 조화로운 기운으로", tags:["복된 사람","조화로운 사람","넉넉한 사람"], ext:["복","조화","넉넉함"] },
-    { keys:["자라","번성","번창","성장","무성","여름","봄"], action:"왕성한 생명력과 성장의 에너지로", tags:["성장하는 사람","생명력 있는 사람","번성하는 사람"], ext:["성장","생명력","활력"] },
-    { keys:["오래","영원","끈기","지속","겨울"], action:"오래도록 변치 않는 끈기로", tags:["끈기 있는 사람","지속하는 사람","인내하는 사람"], ext:["끈기","지속","인내"] }
-  ];
-  for (const e of keyMap) {
-    if (e.keys.some(k => meaning.includes(k))) {
-      return { basic:`${meaning}을(를) 뜻합니다.`, ext:e.ext, action:e.action, tags:e.tags };
-    }
-  }
-  // 3단계: fallback — 최소한 basic 뜻은 그대로 노출
-  return {
-    basic: `${meaning}을(를) 뜻합니다.`,
-    ext: [meaning],
-    action: `${meaning}의 정신으로`,
+    action: `${meaning}의 마음으로`,
     tags: ["자신만의 길을 가는 사람"]
   };
 }
